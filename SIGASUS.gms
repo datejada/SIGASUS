@@ -23,13 +23,13 @@ OPTION threads  =   -1 ; // number of cores
 ;
 * Indices, sets, parameters, and variables
 SETS
-g     "Generating unit index                           "
-s     "Storage unit index                              "
-t     "Time period index                               "
-GE(g) "Subset of existing generating units             "
-SE(s) "Subset of existing storage units                "
-GO(g) "Subset of generating units owned by the producer"
-SO(s) "Subset of storage units owned by the producer   "
+g     "Generating unit index                 "
+s     "Storage unit index                    "
+t     "Time period index                     "
+GE(g) "Subset of existing generating units   "
+SE(s) "Subset of existing storage units      "
+GB(g) "Subset of generating units to be built"
+SB(s) "Subset of storage    units to be built"
 ;
 PARAMETERS
 CS               "Load shedding cost (€/MWh)                            "
@@ -41,82 +41,82 @@ IG         (g  ) "Annualized investment cost of generating unit g (€)   "
 IS         (s  ) "Annualized investment cost of storage unit s (€)      "
 PG         (g  ) "Capacity of genering unit g (MW).                     "
 PS         (s  ) "Capacity of storage unit s (MW).                      "
-BETAUB_MIN (g,t) ""
-BETAUB_MAX (g,t) ""
-GAMMALB_MIN(s,t) ""
-GAMMALB_MAX(s,t) ""
-GAMMAUB_MIN(s,t) ""
-GAMMAUB_MAX(s,t) ""
-MUUB_MIN   (s,t) ""
-MUUB_MAX   (s,t) ""
+BETAUB_MIN (g,t) "Auxiliary large constants used for linearization      "
+BETAUB_MAX (g,t) "Auxiliary large constants used for linearization      "
+GAMMALB_MIN(s,t) "Auxiliary large constants used for linearization      "
+GAMMALB_MAX(s,t) "Auxiliary large constants used for linearization      "
+GAMMAUB_MIN(s,t) "Auxiliary large constants used for linearization      "
+GAMMAUB_MAX(s,t) "Auxiliary large constants used for linearization      "
+MUUB_MIN   (s,t) "Auxiliary large constants used for linearization      "
+MUUB_MAX   (s,t) "Auxiliary large constants used for linearization      "
 ;
 FREE VARIABLES
-of           "objective function                                                                                                         "
-lambda (  t) "Electricity price at time t (€/MWh)                                                                                        "
-kappa  (s,t) ""
+of           "objective function                                                                    "
+p_st   (s,t) "Output of storage unit s and time t. Discharge if positive and charge if negative (MW)"
+lambda (  t) "Electricity price at time t (€/MWh)                                                   "
+kappa  (s,t) "Dual of definition of storage balance of storage unit s and time t (€/MWh)            "
 ;
 POSITIVE VARIABLES
-p_gt       (g,t) "Output of generating unit g in time t (MW)                                                                                 "
-p_st       (s,t) "Output of storage unit s and time t. Discharge if positive and charge if negative (MW)                                     "
-d_t        (  t) "Satisfied demand in time t (MW)                                                                                            "
-e_st       (s,t) "Energy level of storage unit s and time t (MWh)                                                                            "
-alphaUB    (  t) ""
-alphaLB    (  t) ""
-betaUB     (g,t) ""
-betaLB     (g,t) ""
-betaUB_aux (g,t) ""
-gammaUB    (s,t) ""
-gammaLB    (s,t) ""
-gammaUB_aux(s,t) ""
-gammaLB_aux(s,t) ""
-muUB       (s,t) ""
-muLB       (s,t) ""
-muUB_aux   (s,t) ""
+p_gt       (g,t) "Output of generating unit g in time t (MW)                        "
+d_t        (  t) "Satisfied demand in time t (MW)                                   "
+e_st       (s,t) "Energy level of storage unit s and time t (MWh)                   "
+alphaUB    (  t) "Dual of upper bound on demand                                     "
+alphaLB    (  t) "Dual of lower bound on demand                                     "
+betaUB     (g,t) "Dual of upper bound on output       of generating unit g in time t"
+betaLB     (g,t) "Dual of lower bound on output       of generating unit g in time t"
+betaUB_aux (g,t) "Dual of upper bound on output       of generating unit g in time t"
+gammaUB    (s,t) "Dual of upper bound on output       of storage    unit s in time t"
+gammaLB    (s,t) "Dual of lower bound on output       of storage    unit s in time t"
+gammaUB_aux(s,t) "Dual of upper bound on output       of storage    unit s in time t"
+gammaLB_aux(s,t) "Dual of lower bound on output       of storage    unit s in time t"
+muUB       (s,t) "Dual of upper bound on energy level of storage    unit s in time t"
+muLB       (s,t) "Dual of lower bound on energy level of storage    unit s in time t"
+muUB_aux   (s,t) "Dual of upper bound on energy level of storage    unit s in time t"
 ;
 BINARY VARIABLES
-u_g    (g  ) "Binary variable equal to 1 if generating unit g already exists or is built in the current planning period, and 0 otherwise."
-v_s    (s  ) "Binary variable equal to 1 if storage unit s already exists or is built in the current planning period, and 0 otherwise.   "
+u_g    (g  ) "Binary variable equal to 1 if generating unit g already exists or is built in the current planning period, and 0 otherwise"
+v_s    (s  ) "Binary variable equal to 1 if storage    unit s already exists or is built in the current planning period, and 0 otherwise"
 ;
 * Constraints and Model definition
 EQUATIONS
-eObjFun "Objective function                            (20a)"
-eDemBal "Demand balance                                (13a)"
-eUBGPrd "Upper bound generating unit production        (13c)"
-eLBSPrd "Lower bound storage    unit production        (13d)"
-eUBSPrd "Upper bound storage    unit production        (13d)"
-eStoBal "Storage balance constraint                    (13e)"
-eUBSLev "Upper bound storage    unit level             (13f)"
-edLdPgt "Derivative of Lagrangian with respect to p_gt (13g)"
-edLdPst "Derivative of Lagrangian with respect to p_st (13h)"
-edLdEs1 "Derivative of Lagrangian with respect to e_st (13i)"
-edLdEs2 "Derivative of Lagrangian with respect to e_st (13j)"
-eLinEqa "Linearized complementarity equality constraint(15a)"
-eLinLBb "Linearized complementarity lower bound        (15b)"
-eLinUBb "Linearized complementarity upper bound        (15b)"
-eLinLBc "Linearized complementarity lower bound        (15c)"
-eLinUBc "Linearized complementarity upper bound        (15c)"
-eLinLBd "Linearized complementarity lower bound        (15d)"
-eLinUBd "Linearized complementarity upper bound        (15d)"
-eLinLBe "Linearized complementarity lower bound        (15e)"
-eLinUBe "Linearized complementarity upper bound        (15e)"
-eLinLBf "Linearized complementarity lower bound        (15f)"
-eLinUBf "Linearized complementarity upper bound        (15f)"
-eLinLBg "Linearized complementarity lower bound        (15g)"
-eLinUBg "Linearized complementarity upper bound        (15g)"
-eLinLBh "Linearized complementarity lower bound        (15h)"
-eLinUBh "Linearized complementarity upper bound        (15h)"
-eLinLBi "Linearized complementarity lower bound        (15i)"
-eLinUBi "Linearized complementarity upper bound        (15i)"
+eObjFun "Objective function                            (11a)"
+eDemBal "Demand balance                                (4a) "
+eUBGPrd "Upper bound generating unit production        (4c) "
+eLBSPrd "Lower bound storage    unit production        (4d) "
+eUBSPrd "Upper bound storage    unit production        (4d) "
+eStoBal "Storage balance constraint                    (4e) "
+eUBSLev "Upper bound storage    unit level             (4f) "
+edLdPgt "Derivative of Lagrangian with respect to p_gt (4g) "
+edLdPst "Derivative of Lagrangian with respect to p_st (4h) "
+edLdEs1 "Derivative of Lagrangian with respect to e_st (4i) "
+edLdEs2 "Derivative of Lagrangian with respect to e_st (4j) "
+eLinEqa "Linearized complementarity equality constraint(6a) "
+eLinLBb "Linearized complementarity lower bound        (6b) "
+eLinUBb "Linearized complementarity upper bound        (6b) "
+eLinLBc "Linearized complementarity lower bound        (6c) "
+eLinUBc "Linearized complementarity upper bound        (6c) "
+eLinLBd "Linearized complementarity lower bound        (6d) "
+eLinUBd "Linearized complementarity upper bound        (6d) "
+eLinLBe "Linearized complementarity lower bound        (6e) "
+eLinUBe "Linearized complementarity upper bound        (6e) "
+eLinLBf "Linearized complementarity lower bound        (6f) "
+eLinUBf "Linearized complementarity upper bound        (6f) "
+eLinLBg "Linearized complementarity lower bound        (6g) "
+eLinUBg "Linearized complementarity upper bound        (6g) "
+eLinLBh "Linearized complementarity lower bound        (6h) "
+eLinUBh "Linearized complementarity upper bound        (6h) "
+eLinLBi "Linearized complementarity lower bound        (6i) "
+eLinUBi "Linearized complementarity upper bound        (6i) "
 ;
 
 eObjFun..
 of =e=
-    +SUM[(g,t)$GO(g), (betaUB (g,t)-betaUB_aux (g,t))*PG(g)*RHO(g,t)]
-    +SUM[(s,t)$SO(s), (gammaLB(s,t)-gammaLB_aux(s,t))*PS(s)         ]
-    +SUM[(s,t)$SO(s), (gammaUB(s,t)-gammaUB_aux(s,t))*PS(s)         ]
-    +SUM[(s,t)$SO(s), (muUB   (s,t)-muUB_aux   (s,t))*PS(s)*ETA(s  )]
-    +SUM[(g  )$GO(g),               u_g        (g  ) *IG(g)         ]
-    +SUM[(s  )$SO(s),               v_s        (s  ) *IS(s)         ]    
+    +SUM[(g,t)$GB(g), (betaUB (g,t)-betaUB_aux (g,t))*PG(g)*RHO(g,t)]
+    +SUM[(s,t)$SB(s), (gammaLB(s,t)-gammaLB_aux(s,t))*PS(s)         ]
+    +SUM[(s,t)$SB(s), (gammaUB(s,t)-gammaUB_aux(s,t))*PS(s)         ]
+    +SUM[(s,t)$SB(s), (muUB   (s,t)-muUB_aux   (s,t))*PS(s)*ETA(s  )]
+    -SUM[(g  )$GB(g),               u_g        (g  ) *IG(g)         ]
+    -SUM[(s  )$SB(s),               v_s        (s  ) *IS(s)         ]    
 ;
 eDemBal(  t)..SUM[g,p_gt(g,t)]+SUM[s,p_st(s,t)] =e= d_t(t)                ;
 eUBGPrd(g,t)..      p_gt(g,t)                   =l= u_g(g)*PG(g)*RHO(g,t) ;
@@ -158,8 +158,14 @@ eLinUBh(s,t)..muUB   (s,t)-muUB_aux   (s,t) =l= MUUB_MAX   (s,t)*   v_s(s)  ;
 eLinLBi(s,t)..             muUB_aux   (s,t) =g= MUUB_MIN   (s,t)*(1-v_s(s)) ;
 eLinUBi(s,t)..             muUB_aux   (s,t) =l= MUUB_MAX   (s,t)*(1-v_s(s)) ;
 
-MODEL  mSIGASUS / all /
-;
+MODEL  mSIGASUS / all / ;
+mSIGASUS.holdfixed = 1  ;
+mSIGASUS.optfile   = 1  ;
+
+FILE     COPT / cplex.opt  /
+PUT      COPT / 'IIS yes'  /
+PUTCLOSE COPT ;
+
 * Input data
 SETS
 g     /g01*g02/
@@ -167,20 +173,20 @@ s     /s01*s02/
 t     /t01*t24/
 GE(g) /g01    /
 SE(s) /s01    /
-GO(g) /g02    /
-SO(s) /s01    /
+GB(g) /g02    /
+SB(s) /s02    /
 ;
 TABLE tGDATA(g,*) 'generator data'
         LinCost AnInvCost   Cap
-*       [€/MWh]    [€]      [MW]     
-    g01   50       2e2      100
-    g02    5       5e2      100
+*       [€/MWh] [M€/year]   [MW]     
+    g01   85       4.2      100
+    g02    2       7.3      100
 ;
 TABLE tSDATA(s,*) 'storage units data'
-        Effic   AnInvCost   Cap 
-*       [p.u.]     [€]      [MW] 
-    s01  0.85      4e2       50 
-    s02  0.98      8e2       50 
+         ETA   AnInvCost   Cap  
+*        [h]   [M€/year]  [MW]   
+    s01  24       4.6      50   
+    s02   4       2.9      10   
 ;
 TABLE tRHODATA(t,g) 'capacity factor [p.u.]'
 	g01	g02
@@ -236,30 +242,30 @@ t22	117
 t23	107
 t24	100
 ;
-* load data to parameters
-CG (g  ) = tGDATA  (g,'LinCost'  ) ; 
-IG (g  ) = tGDATA  (g,'AnInvCost') ; 
-PG (g  ) = tGDATA  (g,'Cap'      ) ; 
-ETA(s  ) = tSDATA  (s,'Effic'    ) ; 
-IS (s  ) = tSDATA  (s,'AnInvCost') ; 
-PS (s  ) = tSDATA  (s,'Cap'      ) ; 
-RHO(g,t) = tRHODATA(t,g          ) ;
-D  (  t) = tDEMDATA(t,'MW'       ) ;
-CS       = 10000                   ;
+* load data to parameters and unit conversion
+CG (g  ) = tGDATA  (g,'LinCost'  ) * 1e-3          ; //M€/GWh 
+IG (g  ) = tGDATA  (g,'AnInvCost') * (CARD(t)/8760); //M€ per number of periods
+PG (g  ) = tGDATA  (g,'Cap'      ) * 1e-3          ; //GW
+ETA(s  ) = tSDATA  (s,'ETA'      )                 ; 
+IS (s  ) = tSDATA  (s,'AnInvCost') * (CARD(t)/8760); //M€ per number of periods
+PS (s  ) = tSDATA  (s,'Cap'      ) * 1e-3          ; //GW
+RHO(g,t) = tRHODATA(t,g          )                 ;
+D  (  t) = tDEMDATA(t,'MW'       ) * 1e-3          ; //GW
+CS       = 10                                      ; //M€/GW
 * Big-M values
-BETAUB_MIN (g,t) = 1000 ;
-BETAUB_MAX (g,t) = 1000 ;
-GAMMALB_MIN(s,t) = 1000 ;
-GAMMALB_MAX(s,t) = 1000 ;
-GAMMAUB_MIN(s,t) = 1000 ;
-GAMMAUB_MAX(s,t) = 1000 ;
-MUUB_MIN   (s,t) = 1000 ;
-MUUB_MAX   (s,t) = 1000 ;
+BETAUB_MIN (g,t) =  0            ;
+BETAUB_MAX (g,t) = +PG(g)        ;
+GAMMALB_MIN(s,t) = -PS(s)        ;
+GAMMALB_MAX(s,t) =  0            ;
+GAMMAUB_MIN(s,t) =  0            ;
+GAMMAUB_MAX(s,t) = +PS(s)        ;
+MUUB_MIN   (s,t) =  0            ;
+MUUB_MAX   (s,t) = +PS(s)*ETA(s) ;
 
 * Constraints as bounds on variables
-u_g.fx(g)$[GE(g)] = 1   ; // (20b)
-v_s.fx(s)$[SE(s)] = 1   ; // (20c)
-d_t.up(t)         = D(t); // (13b)
+u_g.fx(g)$[GE(g)] = 1   ; // (11d)
+v_s.fx(s)$[SE(s)] = 1   ; // (11e)
+d_t.up(t)         = D(t); // (4b)
 
 * solve model
 solve mSIGASUS using MIP maximizing of ;
