@@ -21,7 +21,10 @@ $OnEmpty OnMulti OffListing
 OPTION optcr    =    0 ; // tolerance to solve MIP until IntGap < OptcR
 OPTION threads  =   -1 ; // number of cores
 ;
-* Indices, sets, parameters, and variables
+* Scalars, indices, sets, parameters, and variables
+SCALAR
+MIMOD "merchant investor model (1), (0) cost minimization model" / 1 /
+;
 SETS
 g     "Generating unit index                 "
 s     "Storage unit index                    "
@@ -33,6 +36,7 @@ SB(s) "Subset of storage    units to be built"
 ;
 PARAMETERS
 CS               "Load shedding cost (€/MWh)                            "
+DMAX             "Maximum demand level (MW)                             "            
 ETA        (s  ) "Energy capacity of storage unit s (h)                 "
 RHO        (g,t) "Capacity factor of generating unit g and time t (p.u.)"
 CG         (g  ) "Linear cost parameter of generating unit g (€/MWh)    "
@@ -79,7 +83,8 @@ v_s    (s  ) "Binary variable equal to 1 if storage    unit s already exists or 
 ;
 * Constraints and Model definition
 EQUATIONS
-eObjFun "Objective function                            (11a)"
+eOFCInv "Objective function centralized investment     (2a) "
+eOFMInv "Objective function of merchant investors      (11a)"
 eDemBal "Demand balance                                (4a) "
 eUBGPrd "Upper bound generating unit production        (4c) "
 eLBSPrd "Lower bound storage    unit production        (4d) "
@@ -109,7 +114,14 @@ eLinLBi "Linearized complementarity lower bound        (6i) "
 eLinUBi "Linearized complementarity upper bound        (6i) "
 ;
 
-eObjFun..
+eOFCInv $[MIMOD=0]..
+of =e=
+    +SUM[(g,t)$GB(g), CG(g)*      p_gt(g,t) ]
+    +SUM[(g  )$GB(g), IG(g)*      u_g (g  ) ]
+    +SUM[(s  )$SB(s), IS(s)*      v_s (s  ) ]    
+    +SUM[(  t)      , CS   *(D(t)-d_t (  t))]
+;
+eOFMInv $[MIMOD=1]..
 of =e=
     +SUM[(g,t)$GB(g), (betaUB (g,t)-betaUB_aux (g,t))*PG(g)*RHO(g,t)]
     +SUM[(s,t)$SB(s), (gammaLB(s,t)-gammaLB_aux(s,t))*PS(s)         ]
@@ -125,13 +137,13 @@ eUBSPrd(s,t)..                       p_st(s,t)  =l= v_s(s)*PS(s)          ;
 eUBSLev(s,t)..                       e_st(s,t)  =l= v_s(s)*PS(s)*ETA(s)   ;
 eStoBal(s,t)..      e_st(s,t) =e=    e_st(s,t-1) -  p_st(s,t)             ;
 
-edLdPgt(g,t)..CG(g)-lambda(t)-betaLB (g,t)+betaUB (g,t)           =e= 0   ;
-edLdPst(s,t)..     -lambda(t)-gammaLB(s,t)+gammaUB(s,t)+kappa(s,t)=e= 0   ;
+edLdPgt(g,t)$[MIMOD=1]..CG(g)-lambda(t)-betaLB (g,t)+betaUB (g,t)           =e= 0   ;
+edLdPst(s,t)$[MIMOD=1]..     -lambda(t)-gammaLB(s,t)+gammaUB(s,t)+kappa(s,t)=e= 0   ;
 
-edLdEs1(s,t)$[ORD(t)<CARD(t)].. kappa(s,t)-kappa(s,t+1)-muLB(s,t)+muUB(s,t) =e= 0 ;
-edLdEs2(s,t)$[ORD(t)=CARD(t)].. kappa(s,t)             -muLB(s,t)+muUB(s,t) =e= 0 ;
+edLdEs1(s,t)$[MIMOD=1 AND ORD(t)<CARD(t)].. kappa(s,t)-kappa(s,t+1)-muLB(s,t)+muUB(s,t) =e= 0 ;
+edLdEs2(s,t)$[MIMOD=1 AND ORD(t)=CARD(t)].. kappa(s,t)             -muLB(s,t)+muUB(s,t) =e= 0 ;
 
-eLinEqa..
+eLinEqa$[MIMOD=1]..
     +SUM[(g,t), CG(g)*                       p_gt       (g,t) ]
     +SUM[(  t), CS   *         (D(t)        -d_t        (  t))]
    =e= 
@@ -141,22 +153,22 @@ eLinEqa..
     +SUM[(s,t), PS(s)*         (gammaUB(s,t)-gammaUB_aux(s,t))]
     +SUM[(s,t), PS(s)*ETA(s  )*(muUB   (s,t)-muUB_aux   (s,t))]
 ;
-eLinLBb(g,t)..betaUB (g,t)-betaUB_aux (g,t) =g= BETAUB_MIN (g,t)*   u_g(g)  ;
-eLinUBb(g,t)..betaUB (g,t)-betaUB_aux (g,t) =l= BETAUB_MAX (g,t)*   u_g(g)  ;
-eLinLBc(g,t)..             betaUB_aux (g,t) =g= BETAUB_MIN (g,t)*(1-u_g(g)) ;
-eLinUBc(g,t)..             betaUB_aux (g,t) =l= BETAUB_MAX (g,t)*(1-u_g(g)) ;
-eLinLBd(s,t)..gammaLB(s,t)-gammaLB_aux(s,t) =g= GAMMALB_MIN(s,t)*   v_s(s)  ;
-eLinUBd(s,t)..gammaLB(s,t)-gammaLB_aux(s,t) =l= GAMMALB_MAX(s,t)*   v_s(s)  ;
-eLinLBe(s,t)..             gammaLB_aux(s,t) =g= GAMMALB_MIN(s,t)*(1-v_s(s)) ;
-eLinUBe(s,t)..             gammaLB_aux(s,t) =l= GAMMALB_MAX(s,t)*(1-v_s(s)) ;
-eLinLBf(s,t)..gammaUB(s,t)-gammaUB_aux(s,t) =g= GAMMAUB_MIN(s,t)*   v_s(s)  ; 
-eLinUBf(s,t)..gammaUB(s,t)-gammaUB_aux(s,t) =l= GAMMAUB_MAX(s,t)*   v_s(s)  ; 
-eLinLBg(s,t)..             gammaUB_aux(s,t) =g= GAMMAUB_MIN(s,t)*(1-v_s(s)) ; 
-eLinUBg(s,t)..             gammaUB_aux(s,t) =l= GAMMAUB_MAX(s,t)*(1-v_s(s)) ; 
-eLinLBh(s,t)..muUB   (s,t)-muUB_aux   (s,t) =g= MUUB_MIN   (s,t)*   v_s(s)  ;
-eLinUBh(s,t)..muUB   (s,t)-muUB_aux   (s,t) =l= MUUB_MAX   (s,t)*   v_s(s)  ;
-eLinLBi(s,t)..             muUB_aux   (s,t) =g= MUUB_MIN   (s,t)*(1-v_s(s)) ;
-eLinUBi(s,t)..             muUB_aux   (s,t) =l= MUUB_MAX   (s,t)*(1-v_s(s)) ;
+eLinLBb(g,t)$[MIMOD=1]..betaUB (g,t)-betaUB_aux (g,t) =g= BETAUB_MIN (g,t)*   u_g(g)  ;
+eLinUBb(g,t)$[MIMOD=1]..betaUB (g,t)-betaUB_aux (g,t) =l= BETAUB_MAX (g,t)*   u_g(g)  ;
+eLinLBc(g,t)$[MIMOD=1]..             betaUB_aux (g,t) =g= BETAUB_MIN (g,t)*(1-u_g(g)) ;
+eLinUBc(g,t)$[MIMOD=1]..             betaUB_aux (g,t) =l= BETAUB_MAX (g,t)*(1-u_g(g)) ;
+eLinLBd(s,t)$[MIMOD=1]..gammaLB(s,t)-gammaLB_aux(s,t) =g= GAMMALB_MIN(s,t)*   v_s(s)  ;
+eLinUBd(s,t)$[MIMOD=1]..gammaLB(s,t)-gammaLB_aux(s,t) =l= GAMMALB_MAX(s,t)*   v_s(s)  ;
+eLinLBe(s,t)$[MIMOD=1]..             gammaLB_aux(s,t) =g= GAMMALB_MIN(s,t)*(1-v_s(s)) ;
+eLinUBe(s,t)$[MIMOD=1]..             gammaLB_aux(s,t) =l= GAMMALB_MAX(s,t)*(1-v_s(s)) ;
+eLinLBf(s,t)$[MIMOD=1]..gammaUB(s,t)-gammaUB_aux(s,t) =g= GAMMAUB_MIN(s,t)*   v_s(s)  ; 
+eLinUBf(s,t)$[MIMOD=1]..gammaUB(s,t)-gammaUB_aux(s,t) =l= GAMMAUB_MAX(s,t)*   v_s(s)  ; 
+eLinLBg(s,t)$[MIMOD=1]..             gammaUB_aux(s,t) =g= GAMMAUB_MIN(s,t)*(1-v_s(s)) ; 
+eLinUBg(s,t)$[MIMOD=1]..             gammaUB_aux(s,t) =l= GAMMAUB_MAX(s,t)*(1-v_s(s)) ; 
+eLinLBh(s,t)$[MIMOD=1]..muUB   (s,t)-muUB_aux   (s,t) =g= MUUB_MIN   (s,t)*   v_s(s)  ;
+eLinUBh(s,t)$[MIMOD=1]..muUB   (s,t)-muUB_aux   (s,t) =l= MUUB_MAX   (s,t)*   v_s(s)  ;
+eLinLBi(s,t)$[MIMOD=1]..             muUB_aux   (s,t) =g= MUUB_MIN   (s,t)*(1-v_s(s)) ;
+eLinUBi(s,t)$[MIMOD=1]..             muUB_aux   (s,t) =l= MUUB_MAX   (s,t)*(1-v_s(s)) ;
 
 MODEL  mSIGASUS / all / ;
 mSIGASUS.holdfixed = 1  ;
@@ -168,107 +180,120 @@ PUTCLOSE COPT ;
 
 * Input data
 SETS
-g     /g01*g02/
-s     /s01*s02/
+g     /CCGT,WIND,SOLAR/
+s     /PHS,BESS/
 t     /t01*t24/
-GE(g) /g01    /
-SE(s) /s01    /
-GB(g) /g02    /
-SB(s) /s02    /
+GB(g) /CCGT,WIND,SOLAR/
+SB(s) /PHS,BESS/
 ;
+* greenfield approach
+GE(g)=NO ;
+SE(s)=NO ;
+
 TABLE tGDATA(g,*) 'generator data'
-        LinCost AnInvCost   Cap
-*       [€/MWh] [M€/year]   [MW]     
-    g01   85       4.2      100
-    g02    2       7.3      100
+        LinCost   InvCost    Cap
+*       [€/MWh] [€/kW/year] [MW]     
+   CCGT   60       42       100
+   WIND    2       73       100
+   SOLAR   0       85       100   
 ;
 TABLE tSDATA(s,*) 'storage units data'
-         ETA   AnInvCost   Cap  
-*        [h]   [M€/year]  [MW]   
-    s01  24       4.6      50   
-    s02   4       2.9      10   
+         ETA     InvCost     Cap  
+*        [h]   [€/kW/year]  [MW]   
+   PHS   24        62       100   
+   BESS   4         4       100   
 ;
 TABLE tRHODATA(t,g) 'capacity factor [p.u.]'
-	g01	g02
-t01	1.00	1.00
-t02	1.00	0.99
-t03	1.00	0.95
-t04	1.00	0.91
-t05	1.00	0.86
-t06	1.00	0.71
-t07	1.00	0.56
-t08	1.00	0.41
-t09	1.00	0.30
-t10	1.00	0.30
-t11	1.00	0.39
-t12	1.00	0.42
-t13	1.00	0.44
-t14	1.00	0.45
-t15	1.00	0.41
-t16	1.00	0.41
-t17	1.00	0.41
-t18	1.00	0.37
-t19	1.00	0.37
-t20	1.00	0.45
-t21	1.00	0.58
-t22	1.00	0.62
-t23	1.00	0.58
-t24	1.00	0.51
+	CCGT	WIND   SOLAR
+t01	1.00	1.00   0.00
+t02	1.00	0.99   0.00
+t03	1.00	0.95   0.00
+t04	1.00	0.91   0.00
+t05	1.00	0.86   0.03
+t06	1.00	0.71   0.35
+t07	1.00	0.56   0.51
+t08	1.00	0.41   0.59
+t09	1.00	0.30   0.58
+t10	1.00	0.30   0.51
+t11	1.00	0.39   0.23
+t12	1.00	0.42   0.54
+t13	1.00	0.44   0.28
+t14	1.00	0.45   0.34
+t15	1.00	0.41   0.45
+t16	1.00	0.41   0.69
+t17	1.00	0.41   0.70
+t18	1.00	0.37   0.61
+t19	1.00	0.37   0.32
+t20	1.00	0.45   0.02
+t21	1.00	0.58   0.00
+t22	1.00	0.62   0.00
+t23	1.00	0.58   0.00
+t24	1.00	0.51   0.00
 ;
-TABLE tDEMDATA(t,*) 'demand [MW]'
-	MW
-t01	100
-t02	93
-t03	78
-t04	43
-t05	48
-t06	72
-t07	100
-t08	115
-t09	123
-t10	134
-t11	136
-t12	127
-t13	107
-t14	92
-t15	87
-t16	102
-t17	122
-t18	145
-t19	155
-t20	152
-t21	137
-t22	117
-t23	107
-t24	100
+
+TABLE tDEMDATA(t,*) 'demand profile [p.u.]'
+	Profile
+t01	0.65
+t02	0.60
+t03	0.50
+t04	0.28
+t05	0.31
+t06	0.46
+t07	0.65
+t08	0.74
+t09	0.79
+t10	0.86
+t11	0.88
+t12	0.82
+t13	0.69
+t14	0.59
+t15	0.56
+t16	0.66
+t17	0.79
+t18	0.94
+t19	1.00
+t20	0.98
+t21	0.88
+t22	0.75
+t23	0.69
+t24	0.65
 ;
 * load data to parameters and unit conversion
-CG (g  ) = tGDATA  (g,'LinCost'  ) * 1e-3          ; //M€/GWh 
-IG (g  ) = tGDATA  (g,'AnInvCost') * (CARD(t)/8760); //M€ per number of periods
-PG (g  ) = tGDATA  (g,'Cap'      ) * 1e-3          ; //GW
-ETA(s  ) = tSDATA  (s,'ETA'      )                 ; 
-IS (s  ) = tSDATA  (s,'AnInvCost') * (CARD(t)/8760); //M€ per number of periods
-PS (s  ) = tSDATA  (s,'Cap'      ) * 1e-3          ; //GW
-RHO(g,t) = tRHODATA(t,g          )                 ;
-D  (  t) = tDEMDATA(t,'MW'       ) * 1e-3          ; //GW
-CS       = 10                                      ; //M€/GW
+CS       = 10                                          ; //M€/GW
+DMAX     = 0.1                                         ; //GW
+CG (g  ) = tGDATA  (g,'LinCost') * 1e-3                ; //M€/GWh 
+PG (g  ) = tGDATA  (g,'Cap'    ) * 1e-3                ; //GW
+IG (g  ) = tGDATA  (g,'InvCost') * PG(g)*(CARD(t)/8760); //M€ per number of periods
+ETA(s  ) = tSDATA  (s,'ETA'    )                       ; 
+PS (s  ) = tSDATA  (s,'Cap'    ) * 1e-3                ; //GW
+IS (s  ) = tSDATA  (s,'InvCost') * PS(s)*(CARD(t)/8760); //M€ per number of periods
+RHO(g,t) = tRHODATA(t,g        )                       ;
+D  (  t) = tDEMDATA(t,'Profile') * DMAX                ; //GW
 * Big-M values
-BETAUB_MIN (g,t) =  0            ;
-BETAUB_MAX (g,t) = +PG(g)        ;
-GAMMALB_MIN(s,t) = -PS(s)        ;
-GAMMALB_MAX(s,t) =  0            ;
-GAMMAUB_MIN(s,t) =  0            ;
-GAMMAUB_MAX(s,t) = +PS(s)        ;
-MUUB_MIN   (s,t) =  0            ;
-MUUB_MAX   (s,t) = +PS(s)*ETA(s) ;
+BETAUB_MIN (g,t) = 0   ;
+BETAUB_MAX (g,t) = 1e8 ;
+GAMMALB_MIN(s,t) =-1e8 ;
+GAMMALB_MAX(s,t) = 0   ;
+GAMMAUB_MIN(s,t) = 0   ;
+GAMMAUB_MAX(s,t) = 1e8 ;
+MUUB_MIN   (s,t) = 0   ;
+MUUB_MAX   (s,t) = 1e8 ;
 
 * Constraints as bounds on variables
 u_g.fx(g)$[GE(g)] = 1   ; // (11d)
 v_s.fx(s)$[SE(s)] = 1   ; // (11e)
 d_t.up(t)         = D(t); // (4b)
 
-* solve model
+e_st.fx(s,t) $[ORD(t)=CARD(t)] = 0;
+
+
+* solve model merchant investors problem
+MIMOD=1;
 solve mSIGASUS using MIP maximizing of ;
+
+* solve model centralized investment problem
+MIMOD=0;
+solve mSIGASUS using MIP minimizing of ;
 
 * save all in gdx format
 execute_unload 'SIGASUS.gdx'
