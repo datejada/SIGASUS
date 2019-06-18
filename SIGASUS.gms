@@ -17,6 +17,8 @@ $offText
 
 * general options
 $EOLCOM //
+*OPTION limrow   =    0 ; // maximum number of equations in the .lst file
+*OPTION limcol   =     0 ; // maximum number of variables in the .lst file
 $OnEmpty OnMulti OffListing
 OPTION optcr    =    0 ; // tolerance to solve MIP until IntGap < OptcR
 OPTION threads  =   -1 ; // number of cores
@@ -86,11 +88,13 @@ EQUATIONS
 eOFCInv "Objective function centralized investment     (2a) "
 eOFMInv "Objective function of merchant investors      (11a)"
 eDemBal "Demand balance                                (4a) "
+eUBDem  "Upper bound on satisfied demand               (4b) "
 eUBGPrd "Upper bound generating unit production        (4c) "
 eLBSPrd "Lower bound storage    unit production        (4d) "
 eUBSPrd "Upper bound storage    unit production        (4d) "
 eStoBal "Storage balance constraint                    (4e) "
 eUBSLev "Upper bound storage    unit level             (4f) "
+edLdPdt "Derivative of Lagrangian with respect to d_t  (4g) "
 edLdPgt "Derivative of Lagrangian with respect to p_gt (4g) "
 edLdPst "Derivative of Lagrangian with respect to p_st (4h) "
 edLdEs1 "Derivative of Lagrangian with respect to e_st (4i) "
@@ -131,12 +135,14 @@ of =e=
     -SUM[(s  )$SB(s),               v_s        (s  ) *IS(s)         ]    
 ;
 eDemBal(  t)..SUM[g,p_gt(g,t)]+SUM[s,p_st(s,t)] =e= d_t(t)                ;
+eUBDem(   t)..d_t(t)                            =l= D(t)                  ;
 eUBGPrd(g,t)..      p_gt(g,t)                   =l= u_g(g)*PG(g)*RHO(g,t) ;
 eLBSPrd(s,t)..                       p_st(s,t)  =g=-v_s(s)*PS(s)          ;
 eUBSPrd(s,t)..                       p_st(s,t)  =l= v_s(s)*PS(s)          ;
 eUBSLev(s,t)..                       e_st(s,t)  =l= v_s(s)*PS(s)*ETA(s)   ;
 eStoBal(s,t)..      e_st(s,t) =e=    e_st(s,t-1) -  p_st(s,t)             ;
 
+edLdPdt(t)$[MIMOD=1]  ..-CS+lambda(t)-alphaLB(t)+alphaUB(t)                 =e= 0   ; 
 edLdPgt(g,t)$[MIMOD=1]..CG(g)-lambda(t)-betaLB (g,t)+betaUB (g,t)           =e= 0   ;
 edLdPst(s,t)$[MIMOD=1]..     -lambda(t)-gammaLB(s,t)+gammaUB(s,t)+kappa(s,t)=e= 0   ;
 
@@ -146,12 +152,12 @@ edLdEs2(s,t)$[MIMOD=1 AND ORD(t)=CARD(t)].. kappa(s,t)             -muLB(s,t)+mu
 eLinEqa$[MIMOD=1]..
     +SUM[(g,t), CG(g)*                       p_gt       (g,t) ]
     +SUM[(  t), CS   *         (D(t)        -d_t        (  t))]
-   =e= 
-    +SUM[(  t), D (t)*          alphaUB(  t)                  ]
-    +SUM[(g,t), PG(g)*RHO(g,t)*(betaUB (g,t)-betaUB_aux (g,t))]
+   =l= 
+    -SUM[(  t), D (t)*          alphaUB(  t)                  ]
+    -SUM[(g,t), PG(g)*RHO(g,t)*(betaUB (g,t)-betaUB_aux (g,t))]
     +SUM[(s,t), PS(s)*         (gammaLB(s,t)-gammaLB_aux(s,t))]
-    +SUM[(s,t), PS(s)*         (gammaUB(s,t)-gammaUB_aux(s,t))]
-    +SUM[(s,t), PS(s)*ETA(s  )*(muUB   (s,t)-muUB_aux   (s,t))]
+    -SUM[(s,t), PS(s)*         (gammaUB(s,t)-gammaUB_aux(s,t))]
+    -SUM[(s,t), PS(s)*ETA(s  )*(muUB   (s,t)-muUB_aux   (s,t))]
 ;
 eLinLBb(g,t)$[MIMOD=1]..betaUB (g,t)-betaUB_aux (g,t) =g= BETAUB_MIN (g,t)*   u_g(g)  ;
 eLinUBb(g,t)$[MIMOD=1]..betaUB (g,t)-betaUB_aux (g,t) =l= BETAUB_MAX (g,t)*   u_g(g)  ;
@@ -180,11 +186,11 @@ PUTCLOSE COPT ;
 
 * Input data
 SETS
-g     /CCGT,WIND,SOLAR/
-s     /PHS,BESS/
+g     /th1,th2,th3,th4,th5,th6,th7,th8,th9,th10,w1,w2,w3,w4,w5,w6,w7,w8,w9,w10,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10/
+s     /ph1,ph2,ph3,ph4,ph5,ph6,ph7,ph8,ph9,ph10,be1,be2,be3,be4,be5,be6,be7,be8,be9,be10/
 t     /t01*t24/
-GB(g) /CCGT,WIND,SOLAR/
-SB(s) /PHS,BESS/
+GB(g) /th1,th2,th3,th4,th5,th6,th7,th8,th9,th10,w1,w2,w3,w4,w5,w6,w7,w8,w9,w10,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10/
+SB(s) /ph1,ph2,ph3,ph4,ph5,ph6,ph7,ph8,ph9,ph10,be1,be2,be3,be4,be5,be6,be7,be8,be9,be10/
 ;
 * greenfield approach
 GE(g)=NO ;
@@ -193,42 +199,87 @@ SE(s)=NO ;
 TABLE tGDATA(g,*) 'generator data'
         LinCost   InvCost    Cap
 *       [€/MWh] [€/kW/year] [MW]     
-   CCGT   60       42       100
-   WIND    2       73       100
-   SOLAR   0       85       100   
+   th1    60       42       100
+   th2    60       42       100
+   th3    60       42       100
+   th4    60       42       100
+   th5    60       42       100
+   th6    60       42       100
+   th7    60       42       100
+   th8    60       42       100
+   th9    60       42       100
+   th10   60       42       100
+   w1      2       73       100
+   w2      2       73       100
+   w3      2       73       100
+   w4      2       73       100
+   w5      2       73       100
+   w6      2       73       100
+   w7      2       73       100
+   w8      2       73       100
+   w9      2       73       100
+   w10     2       73       100
+   s1      0       85       100   
+   s2      0       85       100   
+   s3      0       85       100   
+   s4      0       85       100   
+   s5      0       85       100   
+   s6      0       85       100   
+   s7      0       85       100   
+   s8      0       85       100   
+   s9      0       85       100   
+   s10     0       85       100   
 ;
 TABLE tSDATA(s,*) 'storage units data'
          ETA     InvCost     Cap  
 *        [h]   [€/kW/year]  [MW]   
-   PHS   24        62       100   
-   BESS   4         4       100   
+   ph1   24        62       100   
+   ph2   24        62       100   
+   ph3   24        62       100   
+   ph4   24        62       100   
+   ph5   24        62       100   
+   ph6   24        62       100   
+   ph7   24        62       100   
+   ph8   24        62       100   
+   ph9   24        62       100   
+   ph10  24        62       100   
+   be1    4         4       100   
+   be2    4         4       100   
+   be3    4         4       100   
+   be4    4         4       100   
+   be5    4         4       100   
+   be6    4         4       100   
+   be7    4         4       100   
+   be8    4         4       100   
+   be9    4         4       100   
+   be10   4         4       100   
 ;
 TABLE tRHODATA(t,g) 'capacity factor [p.u.]'
-	CCGT	WIND   SOLAR
-t01	1.00	1.00   0.00
-t02	1.00	0.99   0.00
-t03	1.00	0.95   0.00
-t04	1.00	0.91   0.00
-t05	1.00	0.86   0.03
-t06	1.00	0.71   0.35
-t07	1.00	0.56   0.51
-t08	1.00	0.41   0.59
-t09	1.00	0.30   0.58
-t10	1.00	0.30   0.51
-t11	1.00	0.39   0.23
-t12	1.00	0.42   0.54
-t13	1.00	0.44   0.28
-t14	1.00	0.45   0.34
-t15	1.00	0.41   0.45
-t16	1.00	0.41   0.69
-t17	1.00	0.41   0.70
-t18	1.00	0.37   0.61
-t19	1.00	0.37   0.32
-t20	1.00	0.45   0.02
-t21	1.00	0.58   0.00
-t22	1.00	0.62   0.00
-t23	1.00	0.58   0.00
-t24	1.00	0.51   0.00
+	th1	th2	th3	th4	th5	th6	th7	th8	th9	th10	w1	w2	w3	w4	w5	w6	w7	w8	w9	w10	s1	s2	s3	s4	s5	s6	s7	s8	s9	s10
+t01	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	0	0	0	0	0	0	0	0	0	0
+t02	1	1	1	1	1	1	1	1	1	1	0.99	0.99	0.99	0.99	0.99	0.99	0.99	0.99	0.99	0.99	0	0	0	0	0	0	0	0	0	0
+t03	1	1	1	1	1	1	1	1	1	1	0.95	0.95	0.95	0.95	0.95	0.95	0.95	0.95	0.95	0.95	0	0	0	0	0	0	0	0	0	0
+t04	1	1	1	1	1	1	1	1	1	1	0.91	0.91	0.91	0.91	0.91	0.91	0.91	0.91	0.91	0.91	0	0	0	0	0	0	0	0	0	0
+t05	1	1	1	1	1	1	1	1	1	1	0.86	0.86	0.86	0.86	0.86	0.86	0.86	0.86	0.86	0.86	0.03	0.03	0.03	0.03	0.03	0.03	0.03	0.03	0.03	0.03
+t06	1	1	1	1	1	1	1	1	1	1	0.71	0.71	0.71	0.71	0.71	0.71	0.71	0.71	0.71	0.71	0.35	0.35	0.35	0.35	0.35	0.35	0.35	0.35	0.35	0.35
+t07	1	1	1	1	1	1	1	1	1	1	0.56	0.56	0.56	0.56	0.56	0.56	0.56	0.56	0.56	0.56	0.51	0.51	0.51	0.51	0.51	0.51	0.51	0.51	0.51	0.51
+t08	1	1	1	1	1	1	1	1	1	1	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.59	0.59	0.59	0.59	0.59	0.59	0.59	0.59	0.59	0.59
+t09	1	1	1	1	1	1	1	1	1	1	0.3	0.3	0.3	0.3	0.3	0.3	0.3	0.3	0.3	0.3	0.58	0.58	0.58	0.58	0.58	0.58	0.58	0.58	0.58	0.58
+t10	1	1	1	1	1	1	1	1	1	1	0.3	0.3	0.3	0.3	0.3	0.3	0.3	0.3	0.3	0.3	0.51	0.51	0.51	0.51	0.51	0.51	0.51	0.51	0.51	0.51
+t11	1	1	1	1	1	1	1	1	1	1	0.39	0.39	0.39	0.39	0.39	0.39	0.39	0.39	0.39	0.39	0.23	0.23	0.23	0.23	0.23	0.23	0.23	0.23	0.23	0.23
+t12	1	1	1	1	1	1	1	1	1	1	0.42	0.42	0.42	0.42	0.42	0.42	0.42	0.42	0.42	0.42	0.54	0.54	0.54	0.54	0.54	0.54	0.54	0.54	0.54	0.54
+t13	1	1	1	1	1	1	1	1	1	1	0.44	0.44	0.44	0.44	0.44	0.44	0.44	0.44	0.44	0.44	0.28	0.28	0.28	0.28	0.28	0.28	0.28	0.28	0.28	0.28
+t14	1	1	1	1	1	1	1	1	1	1	0.45	0.45	0.45	0.45	0.45	0.45	0.45	0.45	0.45	0.45	0.34	0.34	0.34	0.34	0.34	0.34	0.34	0.34	0.34	0.34
+t15	1	1	1	1	1	1	1	1	1	1	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.45	0.45	0.45	0.45	0.45	0.45	0.45	0.45	0.45	0.45
+t16	1	1	1	1	1	1	1	1	1	1	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.69	0.69	0.69	0.69	0.69	0.69	0.69	0.69	0.69	0.69
+t17	1	1	1	1	1	1	1	1	1	1	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.7	0.7	0.7	0.7	0.7	0.7	0.7	0.7	0.7	0.7
+t18	1	1	1	1	1	1	1	1	1	1	0.37	0.37	0.37	0.37	0.37	0.37	0.37	0.37	0.37	0.37	0.61	0.61	0.61	0.61	0.61	0.61	0.61	0.61	0.61	0.61
+t19	1	1	1	1	1	1	1	1	1	1	0.37	0.37	0.37	0.37	0.37	0.37	0.37	0.37	0.37	0.37	0.32	0.32	0.32	0.32	0.32	0.32	0.32	0.32	0.32	0.32
+t20	1	1	1	1	1	1	1	1	1	1	0.45	0.45	0.45	0.45	0.45	0.45	0.45	0.45	0.45	0.45	0.02	0.02	0.02	0.02	0.02	0.02	0.02	0.02	0.02	0.02
+t21	1	1	1	1	1	1	1	1	1	1	0.58	0.58	0.58	0.58	0.58	0.58	0.58	0.58	0.58	0.58	0	0	0	0	0	0	0	0	0	0
+t22	1	1	1	1	1	1	1	1	1	1	0.62	0.62	0.62	0.62	0.62	0.62	0.62	0.62	0.62	0.62	0	0	0	0	0	0	0	0	0	0
+t23	1	1	1	1	1	1	1	1	1	1	0.58	0.58	0.58	0.58	0.58	0.58	0.58	0.58	0.58	0.58	0	0	0	0	0	0	0	0	0	0
+t24	1	1	1	1	1	1	1	1	1	1	0.51	0.51	0.51	0.51	0.51	0.51	0.51	0.51	0.51	0.51	0	0	0	0	0	0	0	0	0	0
 ;
 
 TABLE tDEMDATA(t,*) 'demand profile [p.u.]'
@@ -260,7 +311,7 @@ t24	0.65
 ;
 * load data to parameters and unit conversion
 CS       = 10                                          ; //M€/GW
-DMAX     = 0.1                                         ; //GW
+DMAX     = 0.5                                         ; //GW
 CG (g  ) = tGDATA  (g,'LinCost') * 1e-3                ; //M€/GWh 
 PG (g  ) = tGDATA  (g,'Cap'    ) * 1e-3                ; //GW
 IG (g  ) = tGDATA  (g,'InvCost') * PG(g)*(CARD(t)/8760); //M€ per number of periods
@@ -270,30 +321,56 @@ IS (s  ) = tSDATA  (s,'InvCost') * PS(s)*(CARD(t)/8760); //M€ per number of peri
 RHO(g,t) = tRHODATA(t,g        )                       ;
 D  (  t) = tDEMDATA(t,'Profile') * DMAX                ; //GW
 * Big-M values
-BETAUB_MIN (g,t) = 0   ;
-BETAUB_MAX (g,t) = 1e8 ;
-GAMMALB_MIN(s,t) =-1e8 ;
-GAMMALB_MAX(s,t) = 0   ;
-GAMMAUB_MIN(s,t) = 0   ;
-GAMMAUB_MAX(s,t) = 1e8 ;
-MUUB_MIN   (s,t) = 0   ;
-MUUB_MAX   (s,t) = 1e8 ;
+BETAUB_MIN (g,t) = 0    ;
+BETAUB_MAX (g,t) = 1e2 ;
+GAMMALB_MIN(s,t) = 0    ;
+GAMMALB_MAX(s,t) = 1e2 ;
+GAMMAUB_MIN(s,t) = 0    ;
+GAMMAUB_MAX(s,t) = 1e2 ;
+MUUB_MIN   (s,t) = 0    ;
+MUUB_MAX   (s,t) = 1e2 ;
 
 * Constraints as bounds on variables
 u_g.fx(g)$[GE(g)] = 1   ; // (11d)
 v_s.fx(s)$[SE(s)] = 1   ; // (11e)
-d_t.up(t)         = D(t); // (4b)
+*d_t.up(t)         = D(t); // (4b)
 
 e_st.fx(s,t) $[ORD(t)=CARD(t)] = 0;
+*v_s.fx(s)=0;
 
 
 * solve model merchant investors problem
 MIMOD=1;
 solve mSIGASUS using MIP maximizing of ;
 
+File results / results.txt /;
+put results;
+put "Bilevel results"/;
+put "Model status",  mSIGASUS.modelstat /;
+put "Solver status", mSIGASUS.solvestat /;
+put "Objective", of.l /;
+loop((g),
+  put g.tl , u_g.l(g) /
+);
+loop((s),
+  put s.tl , v_s.l(s) /
+);
+
 * solve model centralized investment problem
 MIMOD=0;
-solve mSIGASUS using MIP minimizing of ;
+*solve mSIGASUS using MIP minimizing of ;
+
+put "Centralized results"/;
+put "Model status",  mSIGASUS.modelstat /;
+put "Solver status", mSIGASUS.solvestat /;
+put "Objective", of.l /;
+loop((g),
+  put g.tl , u_g.l(g) /
+);
+loop((s),
+  put s.tl , v_s.l(s) /
+);
+putclose;
 
 * save all in gdx format
 execute_unload 'SIGASUS.gdx'
