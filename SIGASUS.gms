@@ -61,6 +61,10 @@ of           "objective function                                                
 p_st   (s,t) "Output of storage unit s and time t. Discharge if positive and charge if negative (MW)"
 lambda (  t) "Electricity price at time t (€/MWh)                                                   "
 kappa  (s,t) "Dual of definition of storage balance of storage unit s and time t (€/MWh)            "
+betaUB_aux (g,t) "Dual of upper bound on output       of generating unit g in time t"
+gammaUB_aux(s,t) "Dual of upper bound on output       of storage    unit s in time t"
+gammaLB_aux(s,t) "Dual of lower bound on output       of storage    unit s in time t"
+muUB_aux   (s,t) "Dual of upper bound on energy level of storage    unit s in time t"
 ;
 POSITIVE VARIABLES
 p_gt       (g,t) "Output of generating unit g in time t (MW)                        "
@@ -70,14 +74,10 @@ alphaUB    (  t) "Dual of upper bound on demand                                 
 alphaLB    (  t) "Dual of lower bound on demand                                     "
 betaUB     (g,t) "Dual of upper bound on output       of generating unit g in time t"
 betaLB     (g,t) "Dual of lower bound on output       of generating unit g in time t"
-betaUB_aux (g,t) "Dual of upper bound on output       of generating unit g in time t"
 gammaUB    (s,t) "Dual of upper bound on output       of storage    unit s in time t"
 gammaLB    (s,t) "Dual of lower bound on output       of storage    unit s in time t"
-gammaUB_aux(s,t) "Dual of upper bound on output       of storage    unit s in time t"
-gammaLB_aux(s,t) "Dual of lower bound on output       of storage    unit s in time t"
 muUB       (s,t) "Dual of upper bound on energy level of storage    unit s in time t"
 muLB       (s,t) "Dual of lower bound on energy level of storage    unit s in time t"
-muUB_aux   (s,t) "Dual of upper bound on energy level of storage    unit s in time t"
 ;
 BINARY VARIABLES
 u_g    (g  ) "Binary variable equal to 1 if generating unit g already exists or is built in the current planning period, and 0 otherwise"
@@ -134,7 +134,7 @@ of =e=
     -SUM[(g  )$GB(g),               u_g        (g  ) *IG(g)         ]
     -SUM[(s  )$SB(s),               v_s        (s  ) *IS(s)         ]    
 ;
-eDemBal(  t)..SUM[g,p_gt(g,t)]+SUM[s,p_st(s,t)] =e= d_t(t)                ;
+eDemBal(  t)..d_t(t)- SUM[g,p_gt(g,t)]-SUM[s,p_st(s,t)] =e= 0             ;
 eUBDem(   t)..d_t(t)                            =l= D(t)                  ;
 eUBGPrd(g,t)..      p_gt(g,t)                   =l= u_g(g)*PG(g)*RHO(g,t) ;
 eLBSPrd(s,t)..                       p_st(s,t)  =g=-v_s(s)*PS(s)          ;
@@ -152,10 +152,10 @@ edLdEs2(s,t)$[MIMOD=1 AND ORD(t)=CARD(t)].. kappa(s,t)             -muLB(s,t)+mu
 eLinEqa$[MIMOD=1]..
     +SUM[(g,t), CG(g)*                       p_gt       (g,t) ]
     +SUM[(  t), CS   *         (D(t)        -d_t        (  t))]
-   =l= 
-    -SUM[(  t), D (t)*          alphaUB(  t)                  ]
+   =e=    
+    -SUM[(  t), D (t)*         (alphaUB(  t)-CS)              ]
     -SUM[(g,t), PG(g)*RHO(g,t)*(betaUB (g,t)-betaUB_aux (g,t))]
-    +SUM[(s,t), PS(s)*         (gammaLB(s,t)-gammaLB_aux(s,t))]
+    -SUM[(s,t), PS(s)*         (gammaLB(s,t)-gammaLB_aux(s,t))]
     -SUM[(s,t), PS(s)*         (gammaUB(s,t)-gammaUB_aux(s,t))]
     -SUM[(s,t), PS(s)*ETA(s  )*(muUB   (s,t)-muUB_aux   (s,t))]
 ;
@@ -182,6 +182,7 @@ mSIGASUS.optfile   = 1  ;
 
 FILE     COPT / cplex.opt  /
 PUT      COPT / 'IIS yes'  /
+PUT      COPT / 'numericalemphasis 1'  /
 PUTCLOSE COPT ;
 
 * Input data
@@ -310,8 +311,8 @@ t23	0.69
 t24	0.65
 ;
 * load data to parameters and unit conversion
-CS       = 10                                          ; //M€/GW
-DMAX     = 0.5                                         ; //GW
+CS       = 5.0                                         ; //M€/GW
+DMAX     = 1.5                                         ; //GW
 CG (g  ) = tGDATA  (g,'LinCost') * 1e-3                ; //M€/GWh 
 PG (g  ) = tGDATA  (g,'Cap'    ) * 1e-3                ; //GW
 IG (g  ) = tGDATA  (g,'InvCost') * PG(g)*(CARD(t)/8760); //M€ per number of periods
@@ -321,23 +322,18 @@ IS (s  ) = tSDATA  (s,'InvCost') * PS(s)*(CARD(t)/8760); //M€ per number of peri
 RHO(g,t) = tRHODATA(t,g        )                       ;
 D  (  t) = tDEMDATA(t,'Profile') * DMAX                ; //GW
 * Big-M values
-BETAUB_MIN (g,t) = 0    ;
+BETAUB_MIN (g,t) =   0 ;
 BETAUB_MAX (g,t) = 1e2 ;
-GAMMALB_MIN(s,t) = 0    ;
+GAMMALB_MIN(s,t) =   0 ;
 GAMMALB_MAX(s,t) = 1e2 ;
-GAMMAUB_MIN(s,t) = 0    ;
+GAMMAUB_MIN(s,t) =   0 ;
 GAMMAUB_MAX(s,t) = 1e2 ;
-MUUB_MIN   (s,t) = 0    ;
+MUUB_MIN   (s,t) =   0 ;
 MUUB_MAX   (s,t) = 1e2 ;
 
 * Constraints as bounds on variables
 u_g.fx(g)$[GE(g)] = 1   ; // (11d)
 v_s.fx(s)$[SE(s)] = 1   ; // (11e)
-*d_t.up(t)         = D(t); // (4b)
-
-e_st.fx(s,t) $[ORD(t)=CARD(t)] = 0;
-*v_s.fx(s)=0;
-
 
 * solve model merchant investors problem
 MIMOD=1;
@@ -358,7 +354,7 @@ loop((s),
 
 * solve model centralized investment problem
 MIMOD=0;
-*solve mSIGASUS using MIP minimizing of ;
+solve mSIGASUS using MIP minimizing of ;
 
 put "Centralized results"/;
 put "Model status",  mSIGASUS.modelstat /;
