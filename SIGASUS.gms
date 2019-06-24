@@ -17,11 +17,11 @@ $offText
 
 * general options
 $EOLCOM //
-*OPTION limrow   =    0 ; // maximum number of equations in the .lst file
-*OPTION limcol   =     0 ; // maximum number of variables in the .lst file
 $OnEmpty OnMulti OffListing
 OPTION optcr    =    0 ; // tolerance to solve MIP until IntGap < OptcR
 OPTION threads  =   -1 ; // number of cores
+option savepoint=    2 ; // save into a gdx file solution (0=no save, 1=only the last one, 2=for each solve)
+
 ;
 * Scalars, indices, sets, parameters, and variables
 SCALAR
@@ -35,6 +35,7 @@ GE(g) "Subset of existing generating units   "
 SE(s) "Subset of existing storage units      "
 GB(g) "Subset of generating units to be built"
 SB(s) "Subset of storage    units to be built"
+GT(g) "Subset of thermal    units            "
 ;
 PARAMETERS
 CS               "Load shedding cost (€/MWh)                            "
@@ -55,6 +56,7 @@ GAMMAUB_MIN(s,t) "Auxiliary large constants used for linearization      "
 GAMMAUB_MAX(s,t) "Auxiliary large constants used for linearization      "
 MUUB_MIN   (s,t) "Auxiliary large constants used for linearization      "
 MUUB_MAX   (s,t) "Auxiliary large constants used for linearization      "
+SUMMARY    (*,*) "output summary of results                             "
 ;
 FREE VARIABLES
 of           "objective function                                                                    "
@@ -187,11 +189,14 @@ PUTCLOSE COPT ;
 
 * Input data
 SETS
-g     /th1,th2,th3,th4,th5,th6,th7,th8,th9,th10,w1,w2,w3,w4,w5,w6,w7,w8,w9,w10,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10/
-s     /ph1,ph2,ph3,ph4,ph5,ph6,ph7,ph8,ph9,ph10,be1,be2,be3,be4,be5,be6,be7,be8,be9,be10/
+g     /th01,th02,th03,th04,th05,th06,th07,th08,th09,th10,
+       so01,so02,so03,so04,so05,so06,so07,so08,so09,so10/
+s     /be01,be02,be03,be04,be05,be06,be07,be08,be09,be10/
 t     /t01*t24/
-GB(g) /th1,th2,th3,th4,th5,th6,th7,th8,th9,th10,w1,w2,w3,w4,w5,w6,w7,w8,w9,w10,s1,s2,s3,s4,s5,s6,s7,s8,s9,s10/
-SB(s) /ph1,ph2,ph3,ph4,ph5,ph6,ph7,ph8,ph9,ph10,be1,be2,be3,be4,be5,be6,be7,be8,be9,be10/
+GB(g) /th01,th02,th03,th04,th05,th06,th07,th08,th09,th10,
+       so01,so02,so03,so04,so05,so06,so07,so08,so09,so10/
+SB(s) /be01,be02,be03,be04,be05,be06,be07,be08,be09,be10/
+GT(g) /th01,th02,th03,th04,th05,th06,th07,th08,th09,th10/
 ;
 * greenfield approach
 GE(g)=NO ;
@@ -200,87 +205,67 @@ SE(s)=NO ;
 TABLE tGDATA(g,*) 'generator data'
         LinCost   InvCost    Cap
 *       [€/MWh] [€/kW/year] [MW]     
-   th1    60       42       100
-   th2    60       42       100
-   th3    60       42       100
-   th4    60       42       100
-   th5    60       42       100
-   th6    60       42       100
-   th7    60       42       100
-   th8    60       42       100
-   th9    60       42       100
-   th10   60       42       100
-   w1      2       73       100
-   w2      2       73       100
-   w3      2       73       100
-   w4      2       73       100
-   w5      2       73       100
-   w6      2       73       100
-   w7      2       73       100
-   w8      2       73       100
-   w9      2       73       100
-   w10     2       73       100
-   s1      0       85       100   
-   s2      0       85       100   
-   s3      0       85       100   
-   s4      0       85       100   
-   s5      0       85       100   
-   s6      0       85       100   
-   s7      0       85       100   
-   s8      0       85       100   
-   s9      0       85       100   
-   s10     0       85       100   
+   th01    60       42       100
+   th02    60       42       100
+   th03    60       42       100
+   th04    60       42       100
+   th05    60       42       100
+   th06    60       42       100
+   th07    60       42       100
+   th08    60       42       100
+   th09    60       42       100
+   th10    60       42       100
+   so01     0       85       100   
+   so02     0       85       100   
+   so03     0       85       100   
+   so04     0       85       100   
+   so05     0       85       100   
+   so06     0       85       100   
+   so07     0       85       100   
+   so08     0       85       100   
+   so09     0       85       100   
+   so10     0       85       100   
 ;
 TABLE tSDATA(s,*) 'storage units data'
          ETA     InvCost     Cap  
 *        [h]   [€/kW/year]  [MW]   
-   ph1   24        62       100   
-   ph2   24        62       100   
-   ph3   24        62       100   
-   ph4   24        62       100   
-   ph5   24        62       100   
-   ph6   24        62       100   
-   ph7   24        62       100   
-   ph8   24        62       100   
-   ph9   24        62       100   
-   ph10  24        62       100   
-   be1    4         4       100   
-   be2    4         4       100   
-   be3    4         4       100   
-   be4    4         4       100   
-   be5    4         4       100   
-   be6    4         4       100   
-   be7    4         4       100   
-   be8    4         4       100   
-   be9    4         4       100   
+   be01   4         4       100   
+   be02   4         4       100   
+   be03   4         4       100   
+   be04   4         4       100   
+   be05   4         4       100   
+   be06   4         4       100   
+   be07   4         4       100   
+   be08   4         4       100   
+   be09   4         4       100   
    be10   4         4       100   
 ;
 TABLE tRHODATA(t,g) 'capacity factor [p.u.]'
-	th1	th2	th3	th4	th5	th6	th7	th8	th9	th10	w1	w2	w3	w4	w5	w6	w7	w8	w9	w10	s1	s2	s3	s4	s5	s6	s7	s8	s9	s10
-t01	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	1	0	0	0	0	0	0	0	0	0	0
-t02	1	1	1	1	1	1	1	1	1	1	0.99	0.99	0.99	0.99	0.99	0.99	0.99	0.99	0.99	0.99	0	0	0	0	0	0	0	0	0	0
-t03	1	1	1	1	1	1	1	1	1	1	0.95	0.95	0.95	0.95	0.95	0.95	0.95	0.95	0.95	0.95	0	0	0	0	0	0	0	0	0	0
-t04	1	1	1	1	1	1	1	1	1	1	0.91	0.91	0.91	0.91	0.91	0.91	0.91	0.91	0.91	0.91	0	0	0	0	0	0	0	0	0	0
-t05	1	1	1	1	1	1	1	1	1	1	0.86	0.86	0.86	0.86	0.86	0.86	0.86	0.86	0.86	0.86	0.03	0.03	0.03	0.03	0.03	0.03	0.03	0.03	0.03	0.03
-t06	1	1	1	1	1	1	1	1	1	1	0.71	0.71	0.71	0.71	0.71	0.71	0.71	0.71	0.71	0.71	0.35	0.35	0.35	0.35	0.35	0.35	0.35	0.35	0.35	0.35
-t07	1	1	1	1	1	1	1	1	1	1	0.56	0.56	0.56	0.56	0.56	0.56	0.56	0.56	0.56	0.56	0.51	0.51	0.51	0.51	0.51	0.51	0.51	0.51	0.51	0.51
-t08	1	1	1	1	1	1	1	1	1	1	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.59	0.59	0.59	0.59	0.59	0.59	0.59	0.59	0.59	0.59
-t09	1	1	1	1	1	1	1	1	1	1	0.3	0.3	0.3	0.3	0.3	0.3	0.3	0.3	0.3	0.3	0.58	0.58	0.58	0.58	0.58	0.58	0.58	0.58	0.58	0.58
-t10	1	1	1	1	1	1	1	1	1	1	0.3	0.3	0.3	0.3	0.3	0.3	0.3	0.3	0.3	0.3	0.51	0.51	0.51	0.51	0.51	0.51	0.51	0.51	0.51	0.51
-t11	1	1	1	1	1	1	1	1	1	1	0.39	0.39	0.39	0.39	0.39	0.39	0.39	0.39	0.39	0.39	0.23	0.23	0.23	0.23	0.23	0.23	0.23	0.23	0.23	0.23
-t12	1	1	1	1	1	1	1	1	1	1	0.42	0.42	0.42	0.42	0.42	0.42	0.42	0.42	0.42	0.42	0.54	0.54	0.54	0.54	0.54	0.54	0.54	0.54	0.54	0.54
-t13	1	1	1	1	1	1	1	1	1	1	0.44	0.44	0.44	0.44	0.44	0.44	0.44	0.44	0.44	0.44	0.28	0.28	0.28	0.28	0.28	0.28	0.28	0.28	0.28	0.28
-t14	1	1	1	1	1	1	1	1	1	1	0.45	0.45	0.45	0.45	0.45	0.45	0.45	0.45	0.45	0.45	0.34	0.34	0.34	0.34	0.34	0.34	0.34	0.34	0.34	0.34
-t15	1	1	1	1	1	1	1	1	1	1	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.45	0.45	0.45	0.45	0.45	0.45	0.45	0.45	0.45	0.45
-t16	1	1	1	1	1	1	1	1	1	1	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.69	0.69	0.69	0.69	0.69	0.69	0.69	0.69	0.69	0.69
-t17	1	1	1	1	1	1	1	1	1	1	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.41	0.7	0.7	0.7	0.7	0.7	0.7	0.7	0.7	0.7	0.7
-t18	1	1	1	1	1	1	1	1	1	1	0.37	0.37	0.37	0.37	0.37	0.37	0.37	0.37	0.37	0.37	0.61	0.61	0.61	0.61	0.61	0.61	0.61	0.61	0.61	0.61
-t19	1	1	1	1	1	1	1	1	1	1	0.37	0.37	0.37	0.37	0.37	0.37	0.37	0.37	0.37	0.37	0.32	0.32	0.32	0.32	0.32	0.32	0.32	0.32	0.32	0.32
-t20	1	1	1	1	1	1	1	1	1	1	0.45	0.45	0.45	0.45	0.45	0.45	0.45	0.45	0.45	0.45	0.02	0.02	0.02	0.02	0.02	0.02	0.02	0.02	0.02	0.02
-t21	1	1	1	1	1	1	1	1	1	1	0.58	0.58	0.58	0.58	0.58	0.58	0.58	0.58	0.58	0.58	0	0	0	0	0	0	0	0	0	0
-t22	1	1	1	1	1	1	1	1	1	1	0.62	0.62	0.62	0.62	0.62	0.62	0.62	0.62	0.62	0.62	0	0	0	0	0	0	0	0	0	0
-t23	1	1	1	1	1	1	1	1	1	1	0.58	0.58	0.58	0.58	0.58	0.58	0.58	0.58	0.58	0.58	0	0	0	0	0	0	0	0	0	0
-t24	1	1	1	1	1	1	1	1	1	1	0.51	0.51	0.51	0.51	0.51	0.51	0.51	0.51	0.51	0.51	0	0	0	0	0	0	0	0	0	0
+        so01	so02	so03	so04	so05	so06	so07	so08	so09	so10
+t01     0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00
+t02     0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00
+t03     0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00
+t04     0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00
+t05     0.03    0.03    0.03    0.03    0.03    0.03    0.03    0.03    0.03    0.03
+t06     0.35    0.35    0.35    0.35    0.35    0.35    0.35    0.35    0.35    0.35
+t07     0.51    0.51    0.51    0.51    0.51    0.51    0.51    0.51    0.51    0.51
+t08     0.59    0.59    0.59    0.59    0.59    0.59    0.59    0.59    0.59    0.59
+t09     0.58    0.58    0.58    0.58    0.58    0.58    0.58    0.58    0.58    0.58
+t10     0.51    0.51    0.51    0.51    0.51    0.51    0.51    0.51    0.51    0.51
+t11     0.23    0.23    0.23    0.23    0.23    0.23    0.23    0.23    0.23    0.23
+t12     0.54    0.54    0.54    0.54    0.54    0.54    0.54    0.54    0.54    0.54
+t13     0.28    0.28    0.28    0.28    0.28    0.28    0.28    0.28    0.28    0.28
+t14     0.34    0.34    0.34    0.34    0.34    0.34    0.34    0.34    0.34    0.34
+t15     0.45    0.45    0.45    0.45    0.45    0.45    0.45    0.45    0.45    0.45
+t16     0.69    0.69    0.69    0.69    0.69    0.69    0.69    0.69    0.69    0.69
+t17     0.70    0.70    0.70    0.70    0.70    0.70    0.70    0.70    0.70    0.70
+t18     0.61    0.61    0.61    0.61    0.61    0.61    0.61    0.61    0.61    0.61
+t19     0.32    0.32    0.32    0.32    0.32    0.32    0.32    0.32    0.32    0.32
+t20     0.02    0.02    0.02    0.02    0.02    0.02    0.02    0.02    0.02    0.02
+t21     0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00
+t22     0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00
+t23     0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00
+t24     0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00
 ;
 
 TABLE tDEMDATA(t,*) 'demand profile [p.u.]'
@@ -311,16 +296,18 @@ t23	0.69
 t24	0.65
 ;
 * load data to parameters and unit conversion
-CS       = 5.0                                         ; //M€/GW
-DMAX     = 1.5                                         ; //GW
+CS       = 0.3                                         ; //M€/GW
+DMAX     = 1.0                                         ; //GW
 CG (g  ) = tGDATA  (g,'LinCost') * 1e-3                ; //M€/GWh 
 PG (g  ) = tGDATA  (g,'Cap'    ) * 1e-3                ; //GW
 IG (g  ) = tGDATA  (g,'InvCost') * PG(g)*(CARD(t)/8760); //M€ per number of periods
 ETA(s  ) = tSDATA  (s,'ETA'    )                       ; 
 PS (s  ) = tSDATA  (s,'Cap'    ) * 1e-3                ; //GW
 IS (s  ) = tSDATA  (s,'InvCost') * PS(s)*(CARD(t)/8760); //M€ per number of periods
-RHO(g,t) = tRHODATA(t,g        )                       ;
 D  (  t) = tDEMDATA(t,'Profile') * DMAX                ; //GW
+RHO(g,t) $[    GT(g)] = 1                              ;
+RHO(g,t) $[NOT GT(g)] = tRHODATA(t,g)                  ;
+
 * Big-M values
 BETAUB_MIN (g,t) =   0 ;
 BETAUB_MAX (g,t) = 1e2 ;
@@ -339,36 +326,65 @@ v_s.fx(s)$[SE(s)] = 1   ; // (11e)
 MIMOD=1;
 solve mSIGASUS using MIP maximizing of ;
 
-File results / results.txt /;
-put results;
-put "Bilevel results"/;
-put "Model status",  mSIGASUS.modelstat /;
-put "Solver status", mSIGASUS.solvestat /;
-put "Objective", of.l /;
-loop((g),
-  put g.tl , u_g.l(g) /
-);
-loop((s),
-  put s.tl , v_s.l(s) /
-);
+* save results
+SUMMARY('Model status'   ,'Bilevel results') = mSIGASUS.modelstat + eps ;
+SUMMARY('Solver status'  ,'Bilevel results') = mSIGASUS.solvestat + eps ;
+SUMMARY('Profit [M€]'    ,'Bilevel results') = of.l               + eps ;
+SUMMARY('Total cost [M€]','Bilevel results') =
+    +SUM[(g,t)$GB(g), CG(g)*      p_gt.l(g,t) ]
+    +SUM[(g  )$GB(g), IG(g)*      u_g.l (g  ) ]
+    +SUM[(s  )$SB(s), IS(s)*      v_s.l (s  ) ]    
+    +SUM[(  t)      , CS   *(D(t)-d_t.l (  t))]                   + eps ;
+SUMMARY('Inves cost [M€]','Bilevel results') = 
+    +SUM[(g  )$GB(g), IG(g)*      u_g.l (g  ) ]
+    +SUM[(s  )$SB(s), IS(s)*      v_s.l (s  ) ]                   + eps ;
+SUMMARY('Oper  cost [M€]','Bilevel results') = 
+    +SUM[(g,t)$GB(g), CG(g)*      p_gt.l(g,t) ]
+    +SUM[(  t)      , CS   *(D(t)-d_t.l (  t))]                   + eps ;
+SUMMARY('Avg. Price [€/MWh]','Bilevel results')=
+    +SUM[t,lambda.l(t)*d_t.l(t)]/SUM[t,d_t.l(t)] *1e3             + eps ; 
+SUMMARY('Load Shedding [%]','Bilevel results')=
+    +SUM[t,       D(t)-d_t.l(t)]/SUM[t,    D(t)] *1e2             + eps ;
+SUMMARY('Thermal Inv [MW]','Bilevel results')=
+    +SUM[g$[    GT(g)], u_g.l(g)*PG(g)]          *1e3             + eps ;
+SUMMARY('Renewable Inv [MW]','Bilevel results')=
+    +SUM[g$[NOT GT(g)], u_g.l(g)*PG(g)]          *1e3             + eps ;
+SUMMARY('Storage Inv [MW]','Bilevel results')=
+    +SUM[s            , v_s.l(s)*PS(s)]          *1e3             + eps ;
 
 * solve model centralized investment problem
 MIMOD=0;
 solve mSIGASUS using MIP minimizing of ;
 
-put "Centralized results"/;
-put "Model status",  mSIGASUS.modelstat /;
-put "Solver status", mSIGASUS.solvestat /;
-put "Objective", of.l /;
-loop((g),
-  put g.tl , u_g.l(g) /
-);
-loop((s),
-  put s.tl , v_s.l(s) /
-);
-putclose;
+* save results
+SUMMARY('Model status'   ,'Centralized results') = mSIGASUS.modelstat + eps ;
+SUMMARY('Solver status'  ,'Centralized results') = mSIGASUS.solvestat + eps ;
+SUMMARY('Profit [M€]'    ,'Centralized results') =
+    +SUM[(g,t)$GB(g), (-eDemBal.m(t)-CG(g))*      p_gt.l(g,t) ]
+    +SUM[(s,t)$SB(s), (-eDemBal.m(t)      )*      p_st.l(s,t) ]
+    -SUM[(g  )$GB(g),                IG(g) *      u_g.l (g  ) ]
+    -SUM[(s  )$SB(s),                IS(s) *      v_s.l (s  ) ]       + eps ;
+SUMMARY('Total cost [M€]','Centralized results') = of.l               + eps ;
+SUMMARY('Inves cost [M€]','Centralized results') = 
+    +SUM[(g  )$GB(g), IG(g)*      u_g.l (g  ) ]
+    +SUM[(s  )$SB(s), IS(s)*      v_s.l (s  ) ]                       + eps ;
+SUMMARY('Oper  cost [M€]','Centralized results') = 
+    +SUM[(g,t)$GB(g), CG(g)*      p_gt.l(g,t) ]
+    +SUM[(  t)      , CS   *(D(t)-d_t.l (  t))]                       + eps ;
+SUMMARY('Avg. Price [€/MWh]','Centralized results')=
+    +SUM[t,-eDemBal.m(t)*d_t.l(t)]/SUM[t,d_t.l(t)] *1e3               + eps ; 
+SUMMARY('Load Shedding [%]','Centralized results')=
+    +SUM[t,         D(t)-d_t.l(t)]/SUM[t,    D(t)] *1e2               + eps ; 
+SUMMARY('Thermal Inv [MW]','Centralized results')=
+    +SUM[g$[    GT(g)], u_g.l(g)*PG(g)]            *1e3               + eps ;
+SUMMARY('Renewable Inv [MW]','Centralized results')=                 
+    +SUM[g$[NOT GT(g)], u_g.l(g)*PG(g)]            *1e3               + eps ;
+SUMMARY('Storage Inv [MW]','Centralized results')=                 
+    +SUM[s            , v_s.l(s)*PS(s)]            *1e3               + eps ;
 
-* save all in gdx format
-execute_unload 'SIGASUS.gdx'
+* save output in excel file format
+execute_unload     "results.gdx" SUMMARY
+execute 'gdxxrw.exe results.gdx EpsOut=0 o=results.xlsx par=SUMMARY'
+execute 'gdxdump    results.gdx     output=results.csv symb=SUMMARY format=csv cdim=y > %system.nullfile%';
 
 $onlisting
