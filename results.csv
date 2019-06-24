@@ -1,0 +1,12 @@
+"Dim1","Bilevel results","Centralized results"
+"Model status",1,1
+"Solver status",1,1
+"Profit [M€]",3.92021232876712,0.0882876712328764
+"Total cost [M€]",1.09578767123288,0.914912328767126
+"Inves cost [M€]",0.143287671232877,0.316712328767123
+"Oper  cost [M€]",0.952500000000001,0.5982
+"Avg. Price [€/MWh]",300.000000005237,60
+"Load Shedding [%]",1.76435406698565,Eps
+"Thermal Inv [MW]",600,700
+"Renewable Inv [MW]",300,1000
+"Storage Inv [MW]",400,300
