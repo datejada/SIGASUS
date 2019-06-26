@@ -5,9 +5,9 @@ For more details please refer to Chapter 3, of the following book:
 AAA
 
 Contributed by
-Dra. Sonja Wogrin          , IEEE Senior Member, email: sonja.wogrin@gmail.com 
-Dr.  Salvador Pineda       , IEEE Senior Member, email: spinedamorente@gmail.com
-Dr.  Diego A. Tejada-Arango, IEEE        Member, email: diegoatejada@gmail.com
+Dr.  Sonja Wogrin          , IEEE Senior Member, email: sonja.wogrin@comillas.edu
+Dr.  Salvador Pineda       , IEEE Senior Member, email: spineda@uma.es
+Dr.  Diego A. Tejada-Arango, IEEE        Member, email: Diego.Tejada.A@ieee.org
 
 We do request that publications derived from the use of the developed GAMS code
 explicitly acknowledge that fact by citing
@@ -39,7 +39,7 @@ GT(g) "Subset of thermal    units            "
 ;
 PARAMETERS
 CS               "Load shedding cost (€/MWh)                            "
-DMAX             "Maximum demand level (MW)                             "            
+DMAX             "Maximum demand level (MW)                             "
 ETA        (s  ) "Energy capacity of storage unit s (h)                 "
 RHO        (g,t) "Capacity factor of generating unit g and time t (p.u.)"
 CG         (g  ) "Linear cost parameter of generating unit g (€/MWh)    "
@@ -56,13 +56,13 @@ GAMMAUB_MIN(s,t) "Auxiliary large constants used for linearization      "
 GAMMAUB_MAX(s,t) "Auxiliary large constants used for linearization      "
 MUUB_MIN   (s,t) "Auxiliary large constants used for linearization      "
 MUUB_MAX   (s,t) "Auxiliary large constants used for linearization      "
-SUMMARY    (*,*) "output summary of results                             "
+SUMMARY    (*,*) "xxxOutput summary of results                          "
 ;
 FREE VARIABLES
-of           "objective function                                                                    "
-p_st   (s,t) "Output of storage unit s and time t. Discharge if positive and charge if negative (MW)"
-lambda (  t) "Electricity price at time t (€/MWh)                                                   "
-kappa  (s,t) "Dual of definition of storage balance of storage unit s and time t (€/MWh)            "
+of               "xxxObjective function                                                                 "
+p_st   (s,t)     "Output of storage unit s and time t. Discharge/discharge if pos/neg (MW)"
+lambda (  t)     "Electricity price at time t (€/MWh)                                                   "
+kappa  (s,t)     "Dual of definition of storage balance of storage unit s and time t (€/MWh)            "
 betaUB_aux (g,t) "Dual of upper bound on output       of generating unit g in time t"
 gammaUB_aux(s,t) "Dual of upper bound on output       of storage    unit s in time t"
 gammaLB_aux(s,t) "Dual of lower bound on output       of storage    unit s in time t"
@@ -87,44 +87,43 @@ v_s    (s  ) "Binary variable equal to 1 if storage    unit s already exists or 
 ;
 * Constraints and Model definition
 EQUATIONS
-eOFCInv "Objective function centralized investment     (2a) "
-eOFMInv "Objective function of merchant investors      (11a)"
-eDemBal "Demand balance                                (4a) "
-eUBDem  "Upper bound on satisfied demand               (4b) "
-eUBGPrd "Upper bound generating unit production        (4c) "
-eLBSPrd "Lower bound storage    unit production        (4d) "
-eUBSPrd "Upper bound storage    unit production        (4d) "
-eStoBal "Storage balance constraint                    (4e) "
-eUBSLev "Upper bound storage    unit level             (4f) "
-edLdPdt "Derivative of Lagrangian with respect to d_t  (4g) "
-edLdPgt "Derivative of Lagrangian with respect to p_gt (4g) "
-edLdPst "Derivative of Lagrangian with respect to p_st (4h) "
-edLdEs1 "Derivative of Lagrangian with respect to e_st (4i) "
-edLdEs2 "Derivative of Lagrangian with respect to e_st (4j) "
-eLinEqa "Linearized complementarity equality constraint(6a) "
-eLinLBb "Linearized complementarity lower bound        (6b) "
-eLinUBb "Linearized complementarity upper bound        (6b) "
-eLinLBc "Linearized complementarity lower bound        (6c) "
-eLinUBc "Linearized complementarity upper bound        (6c) "
-eLinLBd "Linearized complementarity lower bound        (6d) "
-eLinUBd "Linearized complementarity upper bound        (6d) "
-eLinLBe "Linearized complementarity lower bound        (6e) "
-eLinUBe "Linearized complementarity upper bound        (6e) "
-eLinLBf "Linearized complementarity lower bound        (6f) "
-eLinUBf "Linearized complementarity upper bound        (6f) "
-eLinLBg "Linearized complementarity lower bound        (6g) "
-eLinUBg "Linearized complementarity upper bound        (6g) "
-eLinLBh "Linearized complementarity lower bound        (6h) "
-eLinUBh "Linearized complementarity upper bound        (6h) "
-eLinLBi "Linearized complementarity lower bound        (6i) "
-eLinUBi "Linearized complementarity upper bound        (6i) "
+eOFCInv "Objective function centralized investment     (1a) "
+eOFMInv "Objective function of merchant investors      (10a)"
+eDemBal "Demand balance                                (3a) "
+eUBDem  "Upper bound on satisfied demand               (3b) "
+eUBGPrd "Upper bound generating unit production        (3c) "
+eLBSPrd "Lower bound storage    unit production        (3d) "
+eUBSPrd "Upper bound storage    unit production        (3d) "
+eStoBal "Storage balance constraint                    (3e) "
+eUBSLev "Upper bound storage    unit level             (3f) "
+edLdPdt "Derivative of Lagrangian with respect to d_t  (3g) "
+edLdPgt "Derivative of Lagrangian with respect to p_gt (3g) "
+edLdPst "Derivative of Lagrangian with respect to p_st (3h) "
+edLdEs  "Derivative of Lagrangian with respect to e_st (3ij)"
+eLinEqa "Linearized complementarity equality constraint(5a) "
+eLinLBb "Linearized complementarity lower bound        (5b) "
+eLinUBb "Linearized complementarity upper bound        (5b) "
+eLinLBc "Linearized complementarity lower bound        (5c) "
+eLinUBc "Linearized complementarity upper bound        (5c) "
+eLinLBd "Linearized complementarity lower bound        (5d) "
+eLinUBd "Linearized complementarity upper bound        (5d) "
+eLinLBe "Linearized complementarity lower bound        (5e) "
+eLinUBe "Linearized complementarity upper bound        (5e) "
+eLinLBf "Linearized complementarity lower bound        (5f) "
+eLinUBf "Linearized complementarity upper bound        (5f) "
+eLinLBg "Linearized complementarity lower bound        (5g) "
+eLinUBg "Linearized complementarity upper bound        (5g) "
+eLinLBh "Linearized complementarity lower bound        (5h) "
+eLinUBh "Linearized complementarity upper bound        (5h) "
+eLinLBi "Linearized complementarity lower bound        (5i) "
+eLinUBi "Linearized complementarity upper bound        (5i) "
 ;
 
 eOFCInv $[MIMOD=0]..
 of =e=
     +SUM[(g,t)$GB(g), CG(g)*      p_gt(g,t) ]
     +SUM[(g  )$GB(g), IG(g)*      u_g (g  ) ]
-    +SUM[(s  )$SB(s), IS(s)*      v_s (s  ) ]    
+    +SUM[(s  )$SB(s), IS(s)*      v_s (s  ) ]
     +SUM[(  t)      , CS   *(D(t)-d_t (  t))]
 ;
 eOFMInv $[MIMOD=1]..
@@ -134,7 +133,7 @@ of =e=
     +SUM[(s,t)$SB(s), (gammaUB(s,t)-gammaUB_aux(s,t))*PS(s)         ]
     +SUM[(s,t)$SB(s), (muUB   (s,t)-muUB_aux   (s,t))*PS(s)*ETA(s  )]
     -SUM[(g  )$GB(g),               u_g        (g  ) *IG(g)         ]
-    -SUM[(s  )$SB(s),               v_s        (s  ) *IS(s)         ]    
+    -SUM[(s  )$SB(s),               v_s        (s  ) *IS(s)         ]
 ;
 eDemBal(  t)..d_t(t)- SUM[g,p_gt(g,t)]-SUM[s,p_st(s,t)] =e= 0             ;
 eUBDem(   t)..d_t(t)                            =l= D(t)                  ;
@@ -144,17 +143,15 @@ eUBSPrd(s,t)..                       p_st(s,t)  =l= v_s(s)*PS(s)          ;
 eUBSLev(s,t)..                       e_st(s,t)  =l= v_s(s)*PS(s)*ETA(s)   ;
 eStoBal(s,t)..      e_st(s,t) =e=    e_st(s,t-1) -  p_st(s,t)             ;
 
-edLdPdt(t)$[MIMOD=1]  ..-CS+lambda(t)-alphaLB(t)+alphaUB(t)                 =e= 0   ; 
-edLdPgt(g,t)$[MIMOD=1]..CG(g)-lambda(t)-betaLB (g,t)+betaUB (g,t)           =e= 0   ;
-edLdPst(s,t)$[MIMOD=1]..     -lambda(t)-gammaLB(s,t)+gammaUB(s,t)+kappa(s,t)=e= 0   ;
-
-edLdEs1(s,t)$[MIMOD=1 AND ORD(t)<CARD(t)].. kappa(s,t)-kappa(s,t+1)-muLB(s,t)+muUB(s,t) =e= 0 ;
-edLdEs2(s,t)$[MIMOD=1 AND ORD(t)=CARD(t)].. kappa(s,t)             -muLB(s,t)+muUB(s,t) =e= 0 ;
+edLdPdt(  t)$[MIMOD=1]..-CS  +lambda(t)-alphaLB(  t)+alphaUB(  t)           =e= 0 ;
+edLdPgt(g,t)$[MIMOD=1]..CG(g)-lambda(t)-betaLB (g,t)+betaUB (g,t)           =e= 0 ;
+edLdPst(s,t)$[MIMOD=1]..     -lambda(t)-gammaLB(s,t)+gammaUB(s,t)+kappa(s,t)=e= 0 ;
+edLdEs (s,t)$[MIMOD=1]..     kappa(s,t)-kappa(s,t+1)-muLB   (s,t)+muUB (s,t)=e= 0 ;
 
 eLinEqa$[MIMOD=1]..
     +SUM[(g,t), CG(g)*                       p_gt       (g,t) ]
     +SUM[(  t), CS   *         (D(t)        -d_t        (  t))]
-   =e=    
+   =e=
     -SUM[(  t), D (t)*         (alphaUB(  t)-CS)              ]
     -SUM[(g,t), PG(g)*RHO(g,t)*(betaUB (g,t)-betaUB_aux (g,t))]
     -SUM[(s,t), PS(s)*         (gammaLB(s,t)-gammaLB_aux(s,t))]
@@ -169,10 +166,10 @@ eLinLBd(s,t)$[MIMOD=1]..gammaLB(s,t)-gammaLB_aux(s,t) =g= GAMMALB_MIN(s,t)*   v_
 eLinUBd(s,t)$[MIMOD=1]..gammaLB(s,t)-gammaLB_aux(s,t) =l= GAMMALB_MAX(s,t)*   v_s(s)  ;
 eLinLBe(s,t)$[MIMOD=1]..             gammaLB_aux(s,t) =g= GAMMALB_MIN(s,t)*(1-v_s(s)) ;
 eLinUBe(s,t)$[MIMOD=1]..             gammaLB_aux(s,t) =l= GAMMALB_MAX(s,t)*(1-v_s(s)) ;
-eLinLBf(s,t)$[MIMOD=1]..gammaUB(s,t)-gammaUB_aux(s,t) =g= GAMMAUB_MIN(s,t)*   v_s(s)  ; 
-eLinUBf(s,t)$[MIMOD=1]..gammaUB(s,t)-gammaUB_aux(s,t) =l= GAMMAUB_MAX(s,t)*   v_s(s)  ; 
-eLinLBg(s,t)$[MIMOD=1]..             gammaUB_aux(s,t) =g= GAMMAUB_MIN(s,t)*(1-v_s(s)) ; 
-eLinUBg(s,t)$[MIMOD=1]..             gammaUB_aux(s,t) =l= GAMMAUB_MAX(s,t)*(1-v_s(s)) ; 
+eLinLBf(s,t)$[MIMOD=1]..gammaUB(s,t)-gammaUB_aux(s,t) =g= GAMMAUB_MIN(s,t)*   v_s(s)  ;
+eLinUBf(s,t)$[MIMOD=1]..gammaUB(s,t)-gammaUB_aux(s,t) =l= GAMMAUB_MAX(s,t)*   v_s(s)  ;
+eLinLBg(s,t)$[MIMOD=1]..             gammaUB_aux(s,t) =g= GAMMAUB_MIN(s,t)*(1-v_s(s)) ;
+eLinUBg(s,t)$[MIMOD=1]..             gammaUB_aux(s,t) =l= GAMMAUB_MAX(s,t)*(1-v_s(s)) ;
 eLinLBh(s,t)$[MIMOD=1]..muUB   (s,t)-muUB_aux   (s,t) =g= MUUB_MIN   (s,t)*   v_s(s)  ;
 eLinUBh(s,t)$[MIMOD=1]..muUB   (s,t)-muUB_aux   (s,t) =l= MUUB_MAX   (s,t)*   v_s(s)  ;
 eLinLBi(s,t)$[MIMOD=1]..             muUB_aux   (s,t) =g= MUUB_MIN   (s,t)*(1-v_s(s)) ;
@@ -204,7 +201,7 @@ SE(s)=NO ;
 
 TABLE tGDATA(g,*) 'generator data'
         LinCost   InvCost    Cap
-*       [€/MWh] [€/kW/year] [MW]     
+*       [€/MWh] [€/kW/year] [MW]
    th01    60       42       100
    th02    60       42       100
    th03    60       42       100
@@ -215,33 +212,33 @@ TABLE tGDATA(g,*) 'generator data'
    th08    60       42       100
    th09    60       42       100
    th10    60       42       100
-   so01     0       85       100   
-   so02     0       85       100   
-   so03     0       85       100   
-   so04     0       85       100   
-   so05     0       85       100   
-   so06     0       85       100   
-   so07     0       85       100   
-   so08     0       85       100   
-   so09     0       85       100   
-   so10     0       85       100   
+   so01     0       85       100
+   so02     0       85       100
+   so03     0       85       100
+   so04     0       85       100
+   so05     0       85       100
+   so06     0       85       100
+   so07     0       85       100
+   so08     0       85       100
+   so09     0       85       100
+   so10     0       85       100
 ;
 TABLE tSDATA(s,*) 'storage units data'
-         ETA     InvCost     Cap  
-*        [h]   [€/kW/year]  [MW]   
-   be01   4         4       100   
-   be02   4         4       100   
-   be03   4         4       100   
-   be04   4         4       100   
-   be05   4         4       100   
-   be06   4         4       100   
-   be07   4         4       100   
-   be08   4         4       100   
-   be09   4         4       100   
-   be10   4         4       100   
+         ETA     InvCost     Cap
+*        [h]   [€/kW/year]  [MW]
+   be01   4         4       100
+   be02   4         4       100
+   be03   4         4       100
+   be04   4         4       100
+   be05   4         4       100
+   be06   4         4       100
+   be07   4         4       100
+   be08   4         4       100
+   be09   4         4       100
+   be10   4         4       100
 ;
 TABLE tRHODATA(t,g) 'capacity factor [p.u.]'
-        so01	so02	so03	so04	so05	so06	so07	so08	so09	so10
+        so01    so02    so03    so04    so05    so06    so07    so08    so09    so10
 t01     0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00
 t02     0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00
 t03     0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00
@@ -269,39 +266,39 @@ t24     0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00    
 ;
 
 TABLE tDEMDATA(t,*) 'demand profile [p.u.]'
-	Profile
-t01	0.65
-t02	0.60
-t03	0.50
-t04	0.28
-t05	0.31
-t06	0.46
-t07	0.65
-t08	0.74
-t09	0.79
-t10	0.86
-t11	0.88
-t12	0.82
-t13	0.69
-t14	0.59
-t15	0.56
-t16	0.66
-t17	0.79
-t18	0.94
-t19	1.00
-t20	0.98
-t21	0.88
-t22	0.75
-t23	0.69
-t24	0.65
+        Profile
+t01     0.65
+t02     0.60
+t03     0.50
+t04     0.28
+t05     0.31
+t06     0.46
+t07     0.65
+t08     0.74
+t09     0.79
+t10     0.86
+t11     0.88
+t12     0.82
+t13     0.69
+t14     0.59
+t15     0.56
+t16     0.66
+t17     0.79
+t18     0.94
+t19     1.00
+t20     0.98
+t21     0.88
+t22     0.75
+t23     0.69
+t24     0.65
 ;
 * load data to parameters and unit conversion
 CS       = 0.3                                         ; //M€/GW
 DMAX     = 1.0                                         ; //GW
-CG (g  ) = tGDATA  (g,'LinCost') * 1e-3                ; //M€/GWh 
+CG (g  ) = tGDATA  (g,'LinCost') * 1e-3                ; //M€/GWh
 PG (g  ) = tGDATA  (g,'Cap'    ) * 1e-3                ; //GW
 IG (g  ) = tGDATA  (g,'InvCost') * PG(g)*(CARD(t)/8760); //M€ per number of periods
-ETA(s  ) = tSDATA  (s,'ETA'    )                       ; 
+ETA(s  ) = tSDATA  (s,'ETA'    )                       ;
 PS (s  ) = tSDATA  (s,'Cap'    ) * 1e-3                ; //GW
 IS (s  ) = tSDATA  (s,'InvCost') * PS(s)*(CARD(t)/8760); //M€ per number of periods
 D  (  t) = tDEMDATA(t,'Profile') * DMAX                ; //GW
@@ -319,8 +316,8 @@ MUUB_MIN   (s,t) =   0 ;
 MUUB_MAX   (s,t) = 1e2 ;
 
 * Constraints as bounds on variables
-u_g.fx(g)$[GE(g)] = 1   ; // (11d)
-v_s.fx(s)$[SE(s)] = 1   ; // (11e)
+u_g.fx(g)$[GE(g)] = 1   ; // (10d)
+v_s.fx(s)$[SE(s)] = 1   ; // (10e)
 
 * solve model merchant investors problem
 MIMOD=1;
@@ -329,20 +326,20 @@ solve mSIGASUS using MIP maximizing of ;
 * save results
 SUMMARY('Model status'   ,'Bilevel results') = mSIGASUS.modelstat + eps ;
 SUMMARY('Solver status'  ,'Bilevel results') = mSIGASUS.solvestat + eps ;
-SUMMARY('Profit [M€]'    ,'Bilevel results') = of.l               + eps ;
+SUMMARY('Profit [M€]'    ,'Bilevel results') = of.l*(8760/CARD(t))+ eps ;
 SUMMARY('Total cost [M€]','Bilevel results') =
-    +SUM[(g,t)$GB(g), CG(g)*      p_gt.l(g,t) ]
-    +SUM[(g  )$GB(g), IG(g)*      u_g.l (g  ) ]
-    +SUM[(s  )$SB(s), IS(s)*      v_s.l (s  ) ]    
-    +SUM[(  t)      , CS   *(D(t)-d_t.l (  t))]                   + eps ;
-SUMMARY('Inves cost [M€]','Bilevel results') = 
-    +SUM[(g  )$GB(g), IG(g)*      u_g.l (g  ) ]
-    +SUM[(s  )$SB(s), IS(s)*      v_s.l (s  ) ]                   + eps ;
-SUMMARY('Oper  cost [M€]','Bilevel results') = 
-    +SUM[(g,t)$GB(g), CG(g)*      p_gt.l(g,t) ]
-    +SUM[(  t)      , CS   *(D(t)-d_t.l (  t))]                   + eps ;
+    +SUM[(g,t)$GB(g), CG(g)*      p_gt.l(g,t) ]*(8760/CARD(t)) 
+    +SUM[(g  )$GB(g), IG(g)*      u_g.l (g  ) ]*(8760/CARD(t)) 
+    +SUM[(s  )$SB(s), IS(s)*      v_s.l (s  ) ]*(8760/CARD(t)) 
+    +SUM[(  t)      , CS   *(D(t)-d_t.l (  t))]*(8760/CARD(t))    + eps ;
+SUMMARY('Inves cost [M€]','Bilevel results') =
+    +SUM[(g  )$GB(g), IG(g)*      u_g.l (g  ) ]*(8760/CARD(t)) 
+    +SUM[(s  )$SB(s), IS(s)*      v_s.l (s  ) ]*(8760/CARD(t))    + eps ;
+SUMMARY('Oper  cost [M€]','Bilevel results') =
+    +SUM[(g,t)$GB(g), CG(g)*      p_gt.l(g,t) ]*(8760/CARD(t)) 
+    +SUM[(  t)      , CS   *(D(t)-d_t.l (  t))]*(8760/CARD(t))    + eps ;
 SUMMARY('Avg. Price [€/MWh]','Bilevel results')=
-    +SUM[t,lambda.l(t)*d_t.l(t)]/SUM[t,d_t.l(t)] *1e3             + eps ; 
+    +SUM[t,lambda.l(t)*d_t.l(t)]/SUM[t,d_t.l(t)] *1e3             + eps ;
 SUMMARY('Load Shedding [%]','Bilevel results')=
     +SUM[t,       D(t)-d_t.l(t)]/SUM[t,    D(t)] *1e2             + eps ;
 SUMMARY('Thermal Inv [MW]','Bilevel results')=
@@ -357,30 +354,30 @@ MIMOD=0;
 solve mSIGASUS using MIP minimizing of ;
 
 * save results
-SUMMARY('Model status'   ,'Centralized results') = mSIGASUS.modelstat + eps ;
-SUMMARY('Solver status'  ,'Centralized results') = mSIGASUS.solvestat + eps ;
+SUMMARY('Model status'   ,'Centralized results') = mSIGASUS.modelstat     + eps ;
+SUMMARY('Solver status'  ,'Centralized results') = mSIGASUS.solvestat     + eps ;
 SUMMARY('Profit [M€]'    ,'Centralized results') =
-    +SUM[(g,t)$GB(g), (-eDemBal.m(t)-CG(g))*      p_gt.l(g,t) ]
-    +SUM[(s,t)$SB(s), (-eDemBal.m(t)      )*      p_st.l(s,t) ]
-    -SUM[(g  )$GB(g),                IG(g) *      u_g.l (g  ) ]
-    -SUM[(s  )$SB(s),                IS(s) *      v_s.l (s  ) ]       + eps ;
-SUMMARY('Total cost [M€]','Centralized results') = of.l               + eps ;
-SUMMARY('Inves cost [M€]','Centralized results') = 
-    +SUM[(g  )$GB(g), IG(g)*      u_g.l (g  ) ]
-    +SUM[(s  )$SB(s), IS(s)*      v_s.l (s  ) ]                       + eps ;
-SUMMARY('Oper  cost [M€]','Centralized results') = 
-    +SUM[(g,t)$GB(g), CG(g)*      p_gt.l(g,t) ]
-    +SUM[(  t)      , CS   *(D(t)-d_t.l (  t))]                       + eps ;
-SUMMARY('Avg. Price [€/MWh]','Centralized results')=
-    +SUM[t,-eDemBal.m(t)*d_t.l(t)]/SUM[t,d_t.l(t)] *1e3               + eps ; 
-SUMMARY('Load Shedding [%]','Centralized results')=
-    +SUM[t,         D(t)-d_t.l(t)]/SUM[t,    D(t)] *1e2               + eps ; 
-SUMMARY('Thermal Inv [MW]','Centralized results')=
-    +SUM[g$[    GT(g)], u_g.l(g)*PG(g)]            *1e3               + eps ;
-SUMMARY('Renewable Inv [MW]','Centralized results')=                 
-    +SUM[g$[NOT GT(g)], u_g.l(g)*PG(g)]            *1e3               + eps ;
-SUMMARY('Storage Inv [MW]','Centralized results')=                 
-    +SUM[s            , v_s.l(s)*PS(s)]            *1e3               + eps ;
+    +SUM[(g,t)$GB(g),(-eDemBal.m(t)-CG(g))* p_gt.l(g,t)] * (8760/CARD(t))
+    +SUM[(s,t)$SB(s),(-eDemBal.m(t)      )* p_st.l(s,t)] * (8760/CARD(t))
+    -SUM[(g  )$GB(g),               IG(g) * u_g.l (g  )] * (8760/CARD(t))
+    -SUM[(s  )$SB(s),               IS(s) * v_s.l (s  )] * (8760/CARD(t)) + eps ;
+SUMMARY('Total cost [M€]','Centralized results') = of.l  * (8760/CARD(t)) + eps ;
+SUMMARY('Inves cost [M€]','Centralized results') =
+    +SUM[(g  )$GB(g), IG(g)*      u_g.l (g  ) ] * (8760/CARD(t))
+    +SUM[(s  )$SB(s), IS(s)*      v_s.l (s  ) ] * (8760/CARD(t))          + eps ;
+SUMMARY('Oper  cost [M€]','Centralized results') =                        
+    +SUM[(g,t)$GB(g), CG(g)*      p_gt.l(g,t) ] * (8760/CARD(t))          
+    +SUM[(  t)      , CS   *(D(t)-d_t.l (  t))] * (8760/CARD(t))          + eps ;
+SUMMARY('Avg. Price [€/MWh]','Centralized results')=                      
+    +SUM[t,-eDemBal.m(t)*d_t.l(t)]/SUM[t,d_t.l(t)] *1e3                   + eps ;
+SUMMARY('Load Shedding [%]','Centralized results')=                       
+    +SUM[t,         D(t)-d_t.l(t)]/SUM[t,    D(t)] *1e2                   + eps ;
+SUMMARY('Thermal Inv [MW]','Centralized results')=                        
+    +SUM[g$[    GT(g)], u_g.l(g)*PG(g)]            *1e3                   + eps ;
+SUMMARY('Renewable Inv [MW]','Centralized results')=                      
+    +SUM[g$[NOT GT(g)], u_g.l(g)*PG(g)]            *1e3                   + eps ;
+SUMMARY('Storage Inv [MW]','Centralized results')=                        
+    +SUM[s            , v_s.l(s)*PS(s)]            *1e3                   + eps ;
 
 * save output in excel file format
 execute_unload     "results.gdx" SUMMARY
